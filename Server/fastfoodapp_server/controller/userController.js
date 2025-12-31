@@ -159,4 +159,16 @@ export default class userController {
             res.status(500).json({ success: false, message: error.message });
         }
     }
+    // Logout
+    static async logout(req, res) {
+        try {
+            res.status(200).json({
+                success: true,
+                message: 'Đăng xuất thành công'
+            });
+
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Lỗi server' });
+        }
+    }
 }
