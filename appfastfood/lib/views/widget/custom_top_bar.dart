@@ -1,0 +1,110 @@
+import 'package:flutter/material.dart';
+
+class CustomTopBar extends StatelessWidget {
+  final bool isHome;
+
+  const CustomTopBar({
+    super.key,
+    this.isHome = false, // Mặc định là false
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFC529),
+        // borderRadius: BorderRadius.only(
+        //   bottomLeft: Radius.circular(30),
+        //   bottomRight: Radius.circular(30),
+        // ),
+      ),
+      child: SafeArea(
+        bottom: false,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Hàng Search và Icon
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 45,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 15),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: TextField(
+                              decoration: InputDecoration(
+                                hintText: "Search",
+                                border: InputBorder.none,
+                                contentPadding: EdgeInsets.only(bottom: 5),
+                              ),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFE95322),
+                            ),
+                            child: const Icon(Icons.tune, color: Colors.white, size: 14),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildIcon(Icons.shopping_cart_outlined),
+                  const SizedBox(width: 8),
+                  _buildIcon(Icons.notifications_outlined),
+                ],
+              ),
+              
+              // Logic hiển thị lời chào chỉ khi ở Home
+              if (isHome) ...[
+                const SizedBox(height: 20),
+                const Text(
+                  "Good Morning",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 26,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                const Text(
+                  "Nạp Năng Lượng Nào!",
+                  style: TextStyle(
+                    color: Color(0xFFE95322),
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 10),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildIcon(IconData icon) => Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withOpacity(0.3),
+          border: Border.all(color: Colors.white, width: 1.5),
+        ),
+        child: Icon(icon, color: Colors.white, size: 20),
+      );
+}

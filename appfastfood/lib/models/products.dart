@@ -15,13 +15,12 @@ class Product {
     required this.categoryName,
   });
 
-  // Hàm chuyển từ JSON sang Object Dart
   factory Product.fromJson(Map<String, dynamic> json) {
     return Product(
-      id: json['product_id'] ?? 0, // Map với key 'product_id' trong JSON
+      id: json['product_id'] ?? 0,
       name: json['name'] ?? '',
       description: json['description'] ?? '',
-      // Chuyển chuỗi "55000.00" thành số thực double
+      // JSON trả về String "55000.00" nên cần parse
       price: double.tryParse(json['price'].toString()) ?? 0.0,
       imageUrl: json['image_url'] ?? '',
       categoryName: json['category_name'] ?? '',
