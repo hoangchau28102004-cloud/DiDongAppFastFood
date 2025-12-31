@@ -1,4 +1,4 @@
-import 'package:appfastfood/views/home/home_screen.dart';
+import 'package:appfastfood/views/pages/home_page.dart';
 import 'package:flutter/material.dart';
 
 void main() {
@@ -16,7 +16,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const WelcomScreen(),
+      home: const HomePageScreen(),
     );
   }
 }
