@@ -20,9 +20,9 @@ class _WelcomScreenState extends State<WelcomScreen> {
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
               SizedBox(
-                child: Icon(Icons.import_contacts_outlined, size: 200),
                 height: 200,
                 width: 200,
+                child: Icon(Icons.import_contacts_outlined, size: 200),
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -53,32 +53,6 @@ class _WelcomScreenState extends State<WelcomScreen> {
                     style: TextStyle(color: Colors.white),
                   ),
                 ],
-              ),
-              SizedBox(height: 50),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  fixedSize: Size(200, 50),
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.deepOrange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text("Đăng Ký", style: TextStyle(fontSize: 20)),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: () {},
-                style: ElevatedButton.styleFrom(
-                  fixedSize: Size(200, 50),
-                  backgroundColor: Colors.white,
-                  foregroundColor: Colors.deepOrange,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                ),
-                child: Text("Đăng Nhập", style: TextStyle(fontSize: 20)),
               ),
             ],
           ),
