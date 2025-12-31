@@ -10,6 +10,6 @@ userRouter.post('/register', userController.register);
 
 // Protected routes (Cần Token)
 userRouter.get('/profile', auth, userController.profile);
-//userRouter.post('/logout', auth, userController.logout);
+userRouter.post('/logout', auth, userController.logout);
 
 export default userRouter;
