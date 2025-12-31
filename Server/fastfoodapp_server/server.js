@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRouter.js';
-
+import productRouter from './routes/productRouter.js';
 dotenv.config();
 
 const app = express();
@@ -14,6 +14,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Routes
+app.use('/api', productRouter);
 app.use('/api', userRouter);
 
 // Default route
