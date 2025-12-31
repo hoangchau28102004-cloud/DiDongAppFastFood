@@ -1,13 +1,8 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(
-    const MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: HomePageScreen(),
-    ),
-  );
-}
+// 1. IMPORT CÁC FILE MODEL VÀ SERVICE CỦA BẠN VÀO ĐÂY
+// (Sửa lại đường dẫn import cho đúng với thư mục của bạn nếu cần)
+import '../../models/products.dart';
+import '../../service/api_service.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -19,6 +14,10 @@ class HomePageScreen extends StatefulWidget {
 class _HomePageScreenState extends State<HomePageScreen> {
   int _selectedCategoryIndex = 0;
 
+  // 2. KHAI BÁO BIẾN ĐỂ LƯU DỮ LIỆU TỪ API
+  List<Product> _products = [];
+  bool _isLoading = true; // Biến để kiểm tra xem đang tải hay xong rồi
+
   final List<Map<String, dynamic>> _categories = [
     {"name": "All", "icon": Icons.fastfood},
     {"name": "Burger", "icon": Icons.lunch_dining},
@@ -27,23 +26,37 @@ class _HomePageScreenState extends State<HomePageScreen> {
     {"name": "Snack", "icon": Icons.bakery_dining},
   ];
 
+  // 3. GỌI API KHI MÀN HÌNH VỪA KHỞI TẠO
+  @override
+  void initState() {
+    super.initState();
+    _fetchProducts();
+  }
+
+  Future<void> _fetchProducts() async {
+    try {
+      // Gọi hàm lấy sản phẩm từ file api_service.dart
+      List<Product> data = await ApiService().getAllProducts();
+
+      setState(() {
+        _products = data;
+        _isLoading = false; // Đã tải xong, tắt loading
+      });
+    } catch (e) {
+      print("Lỗi tải dữ liệu: $e");
+      setState(() => _isLoading = false); // Có lỗi cũng tắt loading
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      // Cấu trúc chính là Column để xếp dọc các thành phần
       body: Column(
         children: [
-          // ------------------------------------------------
-          // 1. PHẦN CỐ ĐỊNH (HEADER + CATEGORY)
-          // ------------------------------------------------
-
-          // Header màu vàng (Giữ nguyên)
+          // --- HEADER & CATEGORY GIỮ NGUYÊN ---
           const CustomHomHeader(),
-
           const SizedBox(height: 15),
-
-          // Tiêu đề "Categories" (Cố định)
           const Padding(
             padding: EdgeInsets.symmetric(horizontal: 20),
             child: Align(
@@ -54,75 +67,67 @@ class _HomePageScreenState extends State<HomePageScreen> {
               ),
             ),
           ),
-
           const SizedBox(height: 10),
-
-          // Danh sách Category (Cố định - chỉ cuộn ngang trong khu vực của nó)
           SizedBox(
             height: 90,
             child: ListView.builder(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(left: 20),
               itemCount: _categories.length,
-              itemBuilder: (context, index) {
-                return _buildCategoryItem(index);
-              },
+              itemBuilder: (context, index) => _buildCategoryItem(index),
             ),
           ),
+          const SizedBox(height: 10),
 
-          const SizedBox(
-            height: 10,
-          ), // Khoảng cách giữa Category và Lưới sản phẩm
-          // ------------------------------------------------
-          // 2. PHẦN CUỘN DỌC (POPULAR NOW + SẢN PHẨM)
-          // ------------------------------------------------
+          // --- PHẦN HIỂN THỊ SẢN PHẨM (ĐÃ SỬA) ---
           Expanded(
-            // Expanded giúp phần này chiếm hết khoảng trống còn lại bên dưới
             child: Container(
-              color: Colors
-                  .white, // Nền trắng cho phần sản phẩm để tách biệt (tuỳ chọn)
-              child: ListView(
-                padding: EdgeInsets.zero, // Xóa padding mặc định
-                physics: const BouncingScrollPhysics(), // Hiệu ứng cuộn
-                children: [
-                  const SizedBox(height: 20),
-
-                  // Tiêu đề "Popular Now" (Sẽ bị cuộn đi khi kéo xuống)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: Text(
-                      "Popular Now",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-
-                  // Lưới sản phẩm
-                  GridView.builder(
-                    shrinkWrap:
-                        true, // Bắt buộc: để Grid nằm gọn trong ListView
-                    physics:
-                        const NeverScrollableScrollPhysics(), // Bắt buộc: để Grid không cuộn riêng, mà cuộn theo ListView cha
-                    padding: const EdgeInsets.all(20),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 15,
-                          mainAxisSpacing: 15,
-                          childAspectRatio: 0.75, // Tỷ lệ hình/khung
+              color: Colors.white,
+              // 4. KIỂM TRA: NẾU ĐANG TẢI THÌ HIỆN VÒNG XOAY, XONG THÌ HIỆN LIST
+              child: _isLoading
+                  ? const Center(
+                      child: CircularProgressIndicator(color: Colors.orange),
+                    )
+                  : ListView(
+                      padding: EdgeInsets.zero,
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        const SizedBox(height: 20),
+                        const Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20),
+                          child: Text(
+                            "Popular Now",
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
-                    itemCount: 8, // Giả lập 8 sản phẩm
-                    itemBuilder: (context, index) => _buildProductCard(index),
-                  ),
-                ],
-              ),
+
+                        // Lưới sản phẩm thật
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: const EdgeInsets.all(20),
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 2,
+                                crossAxisSpacing: 15,
+                                mainAxisSpacing: 15,
+                                childAspectRatio: 0.75,
+                              ),
+                          // Dùng số lượng thật từ API
+                          itemCount: _products.length,
+                          // Truyền dữ liệu Product vào hàm build card
+                          itemBuilder: (context, index) =>
+                              _buildProductCard(_products[index]),
+                        ),
+                      ],
+                    ),
             ),
           ),
         ],
       ),
-
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: 0,
         selectedItemColor: const Color(0xFFFFC529),
@@ -187,7 +192,12 @@ class _HomePageScreenState extends State<HomePageScreen> {
     );
   }
 
-  Widget _buildProductCard(int index) {
+  // 5. SỬA HÀM NÀY ĐỂ NHẬN MODEL PRODUCT
+  Widget _buildProductCard(Product product) {
+    // Tạo đường dẫn ảnh đầy đủ (Base URL + Link ảnh từ DB)
+    // Lưu ý: Đảm bảo link này đúng với IP máy bạn (dùng ApiService.baseUrl nếu đã khai báo public static)
+    String imageUrl = "${ApiService.baseUrl}/${product.imageUrl}";
+
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,
@@ -203,35 +213,49 @@ class _HomePageScreenState extends State<HomePageScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Ảnh sản phẩm
           Expanded(
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.grey[200],
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(15),
-                ),
+            child: ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(15),
               ),
-              child: Center(
-                child: Icon(Icons.fastfood, size: 40, color: Colors.grey[400]),
+              child: Container(
+                color: Colors.grey[200],
+                width: double.infinity,
+                child: Image.network(
+                  imageUrl,
+                  fit: BoxFit.cover,
+                  // Nếu ảnh lỗi hoặc chưa load được thì hiện icon
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.fastfood,
+                      size: 40,
+                      color: Colors.grey[400],
+                    );
+                  },
+                ),
               ),
             ),
           ),
+          // Thông tin sản phẩm
           Padding(
             padding: const EdgeInsets.all(10),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "Product ${index + 1}",
+                  product.name, // Tên thật
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis, // Cắt bớt nếu tên dài quá
                   style: const TextStyle(fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
-                      "\$12.00",
-                      style: TextStyle(
+                    Text(
+                      "\$${product.price}", // Giá thật
+                      style: const TextStyle(
                         color: Colors.orange,
                         fontWeight: FontWeight.bold,
                       ),
@@ -252,6 +276,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 }
 
+// --- CLASS HEADER (GIỮ NGUYÊN) ---
 class CustomHomHeader extends StatelessWidget {
   const CustomHomHeader({super.key});
   @override
