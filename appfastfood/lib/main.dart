@@ -1,5 +1,5 @@
-import 'package:appfastfood/views/screens/product_detail.dart';
-import 'package:appfastfood/views/screens/splash_screen.dart';
+// import 'package:appfastfood/views/screens/product_detail.dart';
+// import 'package:appfastfood/views/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 import 'views/screens/home_screen.dart';
 
@@ -19,7 +19,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE95322)),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: const HomePageScreen(),
     );
   }
 }

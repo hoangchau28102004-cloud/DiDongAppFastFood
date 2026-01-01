@@ -1,3 +1,4 @@
+import 'package:appfastfood/views/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
@@ -86,7 +87,7 @@ class WelcomeScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Bấm Đăng Ký");
+                      Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen()));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFC529),
@@ -117,7 +118,6 @@ class WelcomeScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Bấm Đăng Nhập");
                       Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
                     },
                     style: ElevatedButton.styleFrom(

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:appfastfood/views/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../service/api_service.dart';
@@ -208,7 +209,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(30),
                         ),
-                        elevation: 5,
+                        elevation: 3,
                       ),
                       child: _isLoading
                           ? const CircularProgressIndicator(color: Colors.white)
@@ -219,18 +220,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 20),
 
                   // SIGN UP LINK
                   const Center(child: Text("or sign up with", style: TextStyle(color: Colors.grey))),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   
                   // Social Icons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       _buildSocialButton("assets/google_Icon.jpg", Colors.white),
-                      const SizedBox(width: 20),
+                      const SizedBox(width: 10),
                       _buildSocialButton("assets/facebook_Icon.jpg", Colors.white),
                     ],
                   ),
@@ -245,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       GestureDetector(
                         onTap: () {
                           // Điều hướng sang màn hình Đăng ký
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
                         },
                         child: const Text(
                           "Sign Up",
@@ -271,7 +272,7 @@ class _LoginScreenState extends State<LoginScreen> {
         color: bgColor.withOpacity(0.2),
         shape: BoxShape.circle,
       ),
-      child: Padding(padding: EdgeInsets.all(10), child: Image.asset(assetName)),
+      child: Padding(padding: EdgeInsets.all(5), child: Image.asset(assetName,fit: BoxFit.contain)),
     );
   }
 }
