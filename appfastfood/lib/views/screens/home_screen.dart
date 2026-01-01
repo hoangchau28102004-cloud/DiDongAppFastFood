@@ -135,19 +135,22 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
                     // Grid Sản phẩm
                     Expanded(
-                      child: GridView.builder(
+                      child: ListView.separated(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 20,
-                          vertical: 19,
+                          vertical: 15,
                         ),
                         physics: const BouncingScrollPhysics(),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 15,
-                              mainAxisSpacing: 15,
-                              childAspectRatio: 0.8,
-                            ),
+                        separatorBuilder: (context, index) {
+                          return Column(
+                            children: [
+                              SizedBox(height: 10),
+                              Divider(),
+                              SizedBox(height: 10),
+                            ],
+                          );
+                        },
+
                         itemCount: _displayProducts.length,
                         itemBuilder: (context, index) {
                           return ProductCard(product: _displayProducts[index]);

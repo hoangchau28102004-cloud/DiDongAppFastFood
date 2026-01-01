@@ -1,3 +1,4 @@
+import 'package:appfastfood/views/screens/product_detail.dart';
 import 'package:flutter/material.dart';
 import 'views/screens/home_screen.dart'; // Đảm bảo import đúng đường dẫn
 

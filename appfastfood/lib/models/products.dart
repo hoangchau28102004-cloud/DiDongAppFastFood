@@ -25,7 +25,7 @@ class Product {
       name: json['name'] ?? '',
       description: json['description'] ?? '',
       // JSON trả về String "55000.00" nên cần parse
-      price: double.tryParse(json['price'].toString()) ?? 0.0,
+      price: double.tryParse(json['price'].toString()) ?? 0,
       imageUrl: json['image_url'] ?? '',
       averageRating: double.tryParse(json['average_rating'].toString()) ?? 0.0,
       reviewCount: int.tryParse(json['review_count'].toString()) ?? 0,
