@@ -195,3 +195,17 @@ INSERT INTO Products (category_id, name, description, price, image_url, status) 
 (5, 'Xúc xích nướng', 'Xúc xích đức nướng thơm lừng.', 25000, 'img/sausage.jpg', 1),
 (5, 'Salad trộn', 'Bắp cải trộn sốt mayonnaise chua ngọt (Coleslaw).', 19000, 'img/coleslaw.jpg', 1),
 (5, 'Khoai tây nghiền', 'Khoai tây nghiền mịn màng rưới sốt nâu đậm đà.', 22000, 'img/mashed_potato.jpg', 1);
+
+-- 1. Đổi tên bảng Comments -> Reviews
+RENAME TABLE Comments TO Reviews;
+
+-- 2. Thêm cột số sao
+ALTER TABLE Reviews
+CHANGE COLUMN comment_id review_id INT AUTO_INCREMENT, -- Đổi tên cột id luôn cho đồng bộ
+CHANGE COLUMN comment_date review_date DATETIME DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN rating TINYINT NOT NULL DEFAULT 5 CHECK (rating >= 1 AND rating <= 5) AFTER product_id;
+
+-- 3. Thêm cột cache vào bảng Products để load cho nhanh
+ALTER TABLE Products
+ADD COLUMN average_rating DECIMAL(3, 1) DEFAULT 0.0,
+ADD COLUMN review_count INT DEFAULT 0;

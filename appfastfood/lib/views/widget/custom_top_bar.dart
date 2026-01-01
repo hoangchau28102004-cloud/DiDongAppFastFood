@@ -12,9 +12,13 @@ class CustomTopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
+<<<<<<< HEAD
       decoration: const BoxDecoration(
         color: Color(0xFFFFC529),
       ),
+=======
+      decoration: const BoxDecoration(color: Color(0xFFFFC529)),
+>>>>>>> aadd39ee6fabafddb544134d968f6b163bd468dc
       child: SafeArea(
         bottom: false,
         child: Padding(
@@ -28,7 +32,7 @@ class CustomTopBar extends StatelessWidget {
                 children: [
                   Expanded(
                     child: Container(
-                      height: 45,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(25),
@@ -51,7 +55,11 @@ class CustomTopBar extends StatelessWidget {
                               shape: BoxShape.circle,
                               color: Color(0xFFE95322),
                             ),
-                            child: const Icon(Icons.tune, color: Colors.white, size: 14),
+                            child: const Icon(
+                              Icons.tune,
+                              color: Colors.white,
+                              size: 16,
+                            ),
                           ),
                         ],
                       ),
@@ -61,6 +69,7 @@ class CustomTopBar extends StatelessWidget {
                   _buildIcon(Icons.shopping_cart_outlined),
                   const SizedBox(width: 8),
                   _buildIcon(Icons.notifications_outlined),
+<<<<<<< HEAD
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () {
@@ -68,9 +77,13 @@ class CustomTopBar extends StatelessWidget {
                     },
                     child: _buildIcon(Icons.person_outline),
                   ),
+=======
+                  const SizedBox(width: 10),
+                  _buildIcon(Icons.person),
+>>>>>>> aadd39ee6fabafddb544134d968f6b163bd468dc
                 ],
               ),
-              
+
               // Logic hiển thị lời chào chỉ khi ở Home
               if (isHome) ...[
                 const SizedBox(height: 20),
@@ -101,13 +114,13 @@ class CustomTopBar extends StatelessWidget {
   }
 
   Widget _buildIcon(IconData icon) => Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: Colors.white.withOpacity(0.3),
-          border: Border.all(color: Colors.white, width: 1.5),
-        ),
-        child: Icon(icon, color: Colors.white, size: 20),
-      );
+    width: 40,
+    height: 40,
+    decoration: BoxDecoration(
+      shape: BoxShape.circle,
+      color: Colors.white.withOpacity(0.3),
+      border: Border.all(color: Colors.white, width: 1.5),
+    ),
+    child: Icon(icon, color: Colors.white, size: 20),
+  );
 }
