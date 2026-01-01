@@ -63,8 +63,13 @@ class CustomTopBar extends StatelessWidget {
                   _buildIcon(Icons.shopping_cart_outlined),
                   const SizedBox(width: 8),
                   _buildIcon(Icons.notifications_outlined),
-                  const SizedBox(width: 10),
-                  _buildIcon(Icons.person),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Scaffold.of(context).openEndDrawer();
+                    },
+                    child: _buildIcon(Icons.person_outline),
+                  ),
                 ],
               ),
 
