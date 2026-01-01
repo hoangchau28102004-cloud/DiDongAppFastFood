@@ -1,3 +1,6 @@
+import 'dart:ffi';
+
+import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:flutter/material.dart';
 import '../../models/products.dart';
 
@@ -12,6 +15,26 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
+  bool _isLoggedIn = false; // Biến theo dõi trạng thái đăng nhập
+
+  @override
+  void initState() {
+    super.initState();
+    _checkLoginStatus(); // Kiểm tra token ngay khi vào màn hình
+  }
+
+  // Hàm kiểm tra token (xử lý cả trường hợp Future hoặc String thường)
+  void _checkLoginStatus() async {
+    // Giả sử getToken trả về String? hoặc Future<String?>
+    // Dùng await để chắc chắn lấy được giá trị thực
+    final token = await StorageHelper.getToken();
+
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = (token != null && token.isNotEmpty);
+      });
+    }
+  }
 
   void _incrementQuantity() {
     setState(() {
@@ -103,17 +126,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          widget.product.name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
                       Text(
                         "${widget.product.price}đ",
                         style: const TextStyle(
@@ -122,10 +134,45 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           color: primaryColor,
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildQuantityButton(
+                            Icons.remove,
+                            _decrementQuantity,
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              "$_quantity",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          _buildQuantityButton(Icons.add, _incrementQuantity),
+                        ],
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.product.name,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
 
                   // Rating và Thời gian (Giả lập)
                   Row(
@@ -171,78 +218,99 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     ),
                   ),
 
-                  const SizedBox(height: 30),
-
-                  // Chọn số lượng
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildQuantityButton(Icons.remove, _decrementQuantity),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "$_quantity",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      _buildQuantityButton(Icons.add, _incrementQuantity),
-                    ],
-                  ),
-
-                  const SizedBox(
-                    height: 20,
-                  ), // Khoảng trống dưới cùng để không bị che
+                  const SizedBox(height: 50),
+                  // Khoảng trống dưới cùng để không bị che
                 ],
               ),
             ),
           ],
         ),
       ),
-
-      // 3. NÚT ADD TO CART DÍNH DƯỚI ĐÁY
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: () {
-            // Xử lý thêm vào giỏ hàng tại đây
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  "Đã thêm $_quantity ${widget.product.name} vào giỏ!",
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  "Tổng tiền: ",
+                  style: TextStyle(color: Colors.grey),
                 ),
               ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentGeometry.bottomRight,
+                  child: Text(
+                    "${widget.product.price * _quantity} VNĐ",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+            ],
           ),
-          child: const Text(
-            "Thêm vào giỏ hàng",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          SizedBox(height: 10),
+          Divider(),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(onPressed: () {}, icon: Icon(Icons.chat)),
+              ),
+              SizedBox(
+                height: 45, // QUAN TRỌNG: Phải set chiều cao cho đường kẻ
+                child: VerticalDivider(
+                  color: primaryColor, // Màu xám
+                  thickness: 1, // Độ dày nét vẽ
+                  width:
+                      20, // Khoảng cách đệm (giống margin left/right gộp lại)
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.shopping_cart_checkout_outlined),
+                ),
+              ),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_isLoggedIn) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Mua thành công sản phẩm"),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Vui lòng đăng nhập tài khoản"),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(10),
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusGeometry.circular(10),
+                    ),
+                  ),
+                  child: Text("Mua với voucher"),
+                ),
+              ),
+              SizedBox(width: 10),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -251,13 +319,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget _buildQuantityButton(IconData icon, VoidCallback onPressed) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(10),
+        color: Color.fromARGB(255, 244, 148, 3),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: IconButton(
         onPressed: onPressed,
         icon: Icon(icon, color: Colors.black),
-        splashRadius: 20,
+        // splashRadius: 20,
       ),
     );
   }
