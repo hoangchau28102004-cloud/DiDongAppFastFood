@@ -5,6 +5,7 @@ import '../widget/custom_top_bar.dart';
 import '../widget/custom_bottom_bar.dart';
 import '../widget/product_card.dart';
 import '../widget/side_menu.dart';
+import '../screens/product_detail.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -155,7 +156,23 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
                         itemCount: _displayProducts.length,
                         itemBuilder: (context, index) {
-                          return ProductCard(product: _displayProducts[index]);
+                          final product =
+                              _displayProducts[index]; // Lấy sản phẩm ra biến
+
+                          // BỌC PRODUCT CARD TRONG GESTURE DETECTOR
+                          return GestureDetector(
+                            onTap: () {
+                              // Điều hướng sang trang chi tiết
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      ProductDetailScreen(product: product),
+                                ),
+                              );
+                            },
+                            child: ProductCard(product: product),
+                          );
                         },
                       ),
                     ),
