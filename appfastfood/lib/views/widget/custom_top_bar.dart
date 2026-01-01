@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 
 class CustomTopBar extends StatelessWidget {
   final bool isHome;
-
+  final TextEditingController? searchController;
+  final Function(String)? onSearchChanged;
   const CustomTopBar({
     super.key,
     this.isHome = false, // Mặc định là false
+    this.searchController,
+    this.onSearchChanged,
   });
 
   @override
@@ -34,8 +37,10 @@ class CustomTopBar extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 15),
                       child: Row(
                         children: [
-                          const Expanded(
+                          Expanded(
                             child: TextField(
+                              controller: searchController,
+                              onChanged: onSearchChanged,
                               decoration: InputDecoration(
                                 hintText: "Search",
                                 border: InputBorder.none,
