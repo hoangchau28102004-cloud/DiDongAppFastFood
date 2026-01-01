@@ -34,7 +34,7 @@ class ProductCard extends StatelessWidget {
                 ),
               ),
             ),
-            
+
             // Lớp phủ đen mờ
             Positioned.fill(
               child: Container(
@@ -42,10 +42,7 @@ class ProductCard extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [
-                      Colors.transparent,
-                      Colors.black.withOpacity(0.6),
-                    ],
+                    colors: [Colors.transparent, Colors.black.withOpacity(0.6)],
                   ),
                 ),
               ),
@@ -61,11 +58,37 @@ class ProductCard extends StatelessWidget {
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Text("5.0", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+                    Text(
+                      "${product.averageRating}",
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
                     SizedBox(width: 2),
                     Icon(Icons.star, color: Colors.amber, size: 14),
+                  ],
+                ),
+              ),
+            ),
+            Positioned(
+              top: 10,
+              right: 10,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.favorite,
+                      color: const Color.fromARGB(255, 242, 242, 242),
+                      size: 14,
+                    ),
                   ],
                 ),
               ),
@@ -75,7 +98,7 @@ class ProductCard extends StatelessWidget {
             Positioned(
               bottom: 10,
               left: 10,
-              right: 10,
+              right: 0,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
@@ -92,14 +115,20 @@ class ProductCard extends StatelessWidget {
                     ),
                   ),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: const Color(0xFFE95322),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(13),
+                        bottomLeft: Radius.circular(13),
+                      ),
                     ),
                     child: Text(
                       // Format giá tiền có thể dùng NumberFormat sau này
-                      "${product.price}đ", 
+                      "${product.price}đ",
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
