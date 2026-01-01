@@ -14,10 +14,6 @@ class CustomTopBar extends StatelessWidget {
       width: double.infinity,
       decoration: const BoxDecoration(
         color: Color(0xFFFFC529),
-        // borderRadius: BorderRadius.only(
-        //   bottomLeft: Radius.circular(30),
-        //   bottomRight: Radius.circular(30),
-        // ),
       ),
       child: SafeArea(
         bottom: false,
@@ -65,6 +61,13 @@ class CustomTopBar extends StatelessWidget {
                   _buildIcon(Icons.shopping_cart_outlined),
                   const SizedBox(width: 8),
                   _buildIcon(Icons.notifications_outlined),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () {
+                      Scaffold.of(context).openEndDrawer();
+                    },
+                    child: _buildIcon(Icons.person_outline),
+                  ),
                 ],
               ),
               

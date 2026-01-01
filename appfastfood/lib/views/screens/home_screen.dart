@@ -4,6 +4,7 @@ import '../../service/api_service.dart';
 import '../widget/custom_top_bar.dart';
 import '../widget/custom_bottom_bar.dart';
 import '../widget/product_card.dart';
+import '../widget/side_menu.dart';
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -66,6 +67,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
+      endDrawer: const SideMenu(),
       body: Column(
         children: [
           // 1. Top Bar (isHome = true để hiện lời chào)

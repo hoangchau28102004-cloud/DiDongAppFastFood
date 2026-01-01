@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'views/screens/home_screen.dart'; // Đảm bảo import đúng đường dẫn
+import 'views/screens/home_screen.dart';
 
 void main() {
   runApp(const MyApp());

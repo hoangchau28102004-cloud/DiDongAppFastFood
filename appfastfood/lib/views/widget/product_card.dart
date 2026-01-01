@@ -52,24 +52,24 @@ class ProductCard extends StatelessWidget {
             ),
 
             // 2. Rating (giả lập vì JSON chưa có field rating)
-            Positioned(
-              top: 10,
-              left: 10,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Row(
-                  children: [
-                    Text("5.0", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
-                    SizedBox(width: 2),
-                    Icon(Icons.star, color: Colors.amber, size: 14),
-                  ],
-                ),
-              ),
-            ),
+            // Positioned(
+            //   top: 10,
+            //   left: 10,
+            //   child: Container(
+            //     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            //     decoration: BoxDecoration(
+            //       color: Colors.white,
+            //       borderRadius: BorderRadius.circular(12),
+            //     ),
+            //     child: const Row(
+            //       children: [
+            //         Text("5.0", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+            //         SizedBox(width: 2),
+            //         Icon(Icons.star, color: Colors.amber, size: 14),
+            //       ],
+            //     ),
+            //   ),
+            // ),
 
             // 3. Tên và Giá
             Positioned(
@@ -97,9 +97,7 @@ class ProductCard extends StatelessWidget {
                       color: const Color(0xFFE95322),
                       borderRadius: BorderRadius.circular(10),
                     ),
-                    child: Text(
-                      // Format giá tiền có thể dùng NumberFormat sau này
-                      "${product.price}đ", 
+                    child: Text("${product.price}đ", 
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
