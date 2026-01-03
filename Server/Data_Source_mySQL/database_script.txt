@@ -153,7 +153,7 @@ CREATE TABLE Order_Details (
 );
 
 INSERT INTO Account (username, password, role, status) 
-VALUES ('admin', 'Admin@123', 'ADMIN', 1);
+VALUES ('admin', '$2a$12$lvwSTHJJZn0WAP3OjVHXS.KnftoXVE8.zzkxGywt1eiAxwPO7QuHW', 'ADMIN', 1);
 
 INSERT INTO Users (account_id, fullname, email, phone, birthday, Image, status) 
 VALUES (LAST_INSERT_ID(), 'Administrator', 'admin@fastfood.com', '0900000000', '1990-01-01', 'img/avatar_admin.png', 1);

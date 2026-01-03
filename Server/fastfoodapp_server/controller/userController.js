@@ -2,11 +2,22 @@ import { hash, compare } from 'bcrypt';
 import jwt from 'jsonwebtoken';
 import userModel from '../models/userModel.js';
 import dotenv from 'dotenv';
+import nodemailer from 'nodemailer';
 dotenv.config();
 
 const JWT_SECRET = process.env.JWT_SECRET;
 const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '8h';
 const PASSWORD_HASH_ROUNDS = parseInt(process.env.PASSWORD_HASH_ROUNDS) || 10;
+
+const otpStore = new Map();
+// Cấu hình gửi mail (Dùng Gmail hoặc SMTP khác)
+const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+        user: process.env.EMAIL_USER, // Email của bạn (cấu hình trong .env)
+        pass: process.env.EMAIL_PASS  // Mật khẩu ứng dụng (App Password)
+    }
+});
 
 export default class userController {
 
@@ -159,6 +170,26 @@ export default class userController {
             res.status(500).json({ success: false, message: error.message });
         }
     }
+    
+    // Forget password
+    static async forgetPassword(req, res) {
+        try {
+            const { username,  } = req.body;
+            if (!username || !newPassword) {
+                return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ thông tin' });
+            }
+            const user = await userModel.findByUsername(username);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'Người dùng không tồn tại' });
+            }
+            const hashedPassword = await hash(newPassword, PASSWORD_HASH_ROUNDS);
+            await userModel.updatePassword(user.account_id, hashedPassword);
+            res.status(200).json({ success: true, message: 'Cập nhật mật khẩu thành công' });
+        } catch (error) {
+            res.status(500).json({ success: false, message: 'Lỗi server' });
+        }
+    }
+
     // Logout
     static async logout(req, res) {
         try {
@@ -232,6 +263,100 @@ export default class userController {
                 success: false,
                 message: 'Lỗi server'
             });
+        }
+    }
+
+    // Gửi mã xác thực
+    static async sendOtp(req, res) {
+        try {
+            const { email } = req.body;
+
+            if (!email) {
+                return res.status(400).json({ success: false, message: 'Vui lòng nhập email' });
+            }
+
+            // Kiểm tra email có tồn tại trong hệ thống không
+            const user = await userModel.findByEmail(email);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'Email không tồn tại trong hệ thống' });
+            }
+
+            // Tạo mã OTP ngẫu nhiên 6 số
+            const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+
+            // Lưu OTP vào RAM Hết hạn sau 5 phút
+            const expiresIn = Date.now() + 5 * 60 * 1000; // 5 phút
+            otpStore.set(email, { code: otpCode, expireAt: expiresIn });
+
+            // Gửi email
+            const mailOptions = {
+                from: process.env.EMAIL_USER,
+                to: email,
+                subject: 'Mã xác thực đổi mật khẩu - App FastFood',
+                text: `Mã xác thực của bạn là: ${otpCode}. Mã này có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này.`
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            res.status(200).json({ success: true, message: 'Đã gửi mã xác thực vào email' });
+
+        } catch (error) {
+            console.error('Lỗi gửi mail:', error);
+            res.status(500).json({ success: false, message: 'Lỗi gửi email: ' + error.message });
+        }
+    }
+
+    // Kiểm tra OTP và Đổi mật khẩu
+    static async resetPassword(req, res) {
+        try {
+            const { email, otp, newPassword } = req.body;
+
+            if (!email || !otp || !newPassword) {
+                return res.status(400).json({ success: false, message: 'Vui lòng nhập đầy đủ: email, otp, newPassword' });
+            }
+
+            // Kiểm tra OTP trong RAM
+            const storedOtpData = otpStore.get(email);
+
+            if (!storedOtpData) {
+                return res.status(400).json({ success: false, message: 'Mã xác thực không tồn tại hoặc đã hết hạn' });
+            }
+
+            if (storedOtpData.code !== otp) {
+                return res.status(400).json({ success: false, message: 'Mã xác thực không chính xác' });
+            }
+
+            if (Date.now() > storedOtpData.expireAt) {
+                otpStore.delete(email); // Xóa mã hết hạn
+                return res.status(400).json({ success: false, message: 'Mã xác thực đã hết hạn' });
+            }
+
+            // Validate mật khẩu mới
+            if (!userController.validatePassword(newPassword)) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Mật khẩu yếu! Cần ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.'
+                });
+            }
+
+            // Lấy thông tin user để lấy account_id
+            const user = await userModel.findByEmail(email);
+            if (!user) {
+                return res.status(404).json({ success: false, message: 'User không tồn tại' });
+            }
+
+            // Mã hóa mật khẩu mới và cập nhật vào DB
+            const hashedPassword = await hash(newPassword, PASSWORD_HASH_ROUNDS);
+            await userModel.updatePassword(user.account_id, hashedPassword);
+
+            // Xóa OTP sau khi dùng xong
+            otpStore.delete(email);
+
+            res.status(200).json({ success: true, message: 'Đổi mật khẩu thành công' });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: 'Lỗi server' });
         }
     }
 }

@@ -1,3 +1,4 @@
+import 'package:appfastfood/views/screens/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
@@ -8,6 +9,15 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE95322),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back_ios_new),
+        ),
+        backgroundColor: const Color(0xFFE95322),
+      ),
       body: SafeArea(
         child: SizedBox(
           width: double.infinity,
@@ -21,20 +31,14 @@ class WelcomeScreen extends StatelessWidget {
               Container(
                 height: 180,
                 width: 180,
-                padding: const EdgeInsets.all(15), 
+                padding: const EdgeInsets.all(15),
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: Colors.white,
-                    width: 2,
-                  ),
+                  border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: ClipOval(
-                  child: Image.asset(
-                    'assets/logoApp.jpg',
-                    fit: BoxFit.contain,
-                  ),
+                  child: Image.asset('assets/logoApp.jpg', fit: BoxFit.contain),
                 ),
               ),
 
@@ -77,7 +81,7 @@ class WelcomeScreen extends StatelessWidget {
               ),
 
               const Spacer(flex: 3),
-              
+
               // Nút Đăng Ký
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -86,7 +90,12 @@ class WelcomeScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Bấm Đăng Ký");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFC529),
@@ -117,8 +126,12 @@ class WelcomeScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Bấm Đăng Nhập");
-                      Navigator.push(context, MaterialPageRoute(builder: (context) => const LoginScreen()));
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const LoginScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFF3E0),
