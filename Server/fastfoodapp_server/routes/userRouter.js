@@ -8,6 +8,10 @@ const userRouter = Router();
 userRouter.post('/login', userController.login);
 userRouter.post('/register', userController.register);
 
+// Routes quên mật khẩu
+userRouter.post('/send-otp', userController.sendOtp);
+userRouter.post('/reset-password', userController.resetPassword);
+
 // Protected routes (Cần Token)
 userRouter.get('/profile', auth, userController.profile);
 userRouter.post('/logout', auth, userController.logout);

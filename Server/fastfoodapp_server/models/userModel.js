@@ -67,4 +67,33 @@ export default class userModel {
             throw new Error('Database query failed: ' + error.message);
         }
     }
+
+    // Tìm user bằng Email để gửi OTP
+    static async findByEmail(email) {
+        try {
+            const sql = `
+                SELECT 
+                    a.account_id, a.Username, a.status,
+                    u.user_id, u.fullname, u.email
+                FROM Users u
+                JOIN Account a ON u.account_id = a.account_id
+                WHERE u.email = ?
+            `;
+            const [rows] = await execute(sql, [email]);
+            return rows[0] ?? null;
+        } catch (error) {
+            throw new Error('Database query failed: ' + error.message);
+        }
+    }
+
+    // Cập nhật mật khẩu mới
+    static async updatePassword(accountId, newHashedPassword) {
+        try {
+            const sql = 'UPDATE Account SET password = ? WHERE account_id = ?';
+            await execute(sql, [newHashedPassword, accountId]);
+            return true;
+        } catch (error) {
+            throw new Error('Update password failed: ' + error.message);
+        }
+    }
 }

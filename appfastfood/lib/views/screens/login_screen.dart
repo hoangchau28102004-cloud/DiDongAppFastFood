@@ -1,10 +1,14 @@
 import 'dart:convert';
-import 'package:appfastfood/views/screens/register_screen.dart';
+import 'package:appfastfood/views/screens/forgot_pass_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+// Import các file vừa tạo
+import '../../utils/app_colors.dart';
+import '../widget/auth_widgets.dart'; 
 import '../../service/api_service.dart';
 import '../../models/users.dart';
 import '../screens/home_screen.dart';
+import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,46 +24,35 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   final ApiService _apiService = ApiService();
 
-  // Hàm xử lý Đăng Nhập
   Future<void> _handleLogin() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập Username và Password"), 
-        backgroundColor: Colors.orange),
+        const SnackBar(content: Text("Vui lòng nhập Username và Password"), backgroundColor: Colors.orange),
       );
       return;
     }
-
     setState(() => _isLoading = true);
-
     try {
       final result = await _apiService.login(
         _usernameController.text.trim(),
         _passwordController.text.trim(),
       );
-
       if (result['success'] == true) {
         User user = User.fromJson(result['user']);
         String token = result['token'];
-
-        // Lưu vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', token);
         await prefs.setString('user_data', jsonEncode(user.toJson()));
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Đăng nhập thành công!"), backgroundColor: Colors.green),
-          );
-          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) => const HomePageScreen()),(route) => false);
+          ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Đăng nhập thành công!"), backgroundColor: Colors.green));
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (context) => const HomePageScreen()), (route) => false);
         }
       }
     } catch (e) {
       if (mounted) {
         String msg = e.toString().replaceAll("Exception: ", "");
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.red),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -68,211 +61,91 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color yellowHeader = Color(0xFFFCD057);
-    const Color inputBg = Color(0xFFFEF5D3);
-    const Color primaryOrange = Color(0xFFE95322);
-    const Color textDark = Color(0xFF4A3B2C);
-
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Column(
           children: [
-            // PHẦN HEADER
-            Container(
-              height: 150,
-              decoration: const BoxDecoration(
-                color: yellowHeader,
-              ),
-              child: SafeArea(
-                child: Stack(
-                  children: [
-                    Positioned(
-                      left: 10,
-                      top: 10,
-                      child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                    ),
-
-                    const Center(
-                      child: Padding(
-                        padding: EdgeInsets.only(bottom: 20),
-                        child: Text(
-                          "Log In",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            // Header dùng chung
+            AuthHeader(
+              title: "Log In",
+              onBackPressed: () => Navigator.pop(context),
             ),
 
-            // PHẦN BODY
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Welcome",
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: textDark,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
+                  const Text("Welcome", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: AppColors.textDark)),
+                  const SizedBox(height: 5),
                   const Text(
-                    "Chào mừng bạn đến với thế giới đồ ăn nhanh! Đăng nhập ngay để không bỏ lỡ những ưu đãi cực 'hời' dành riêng cho bạn hôm nay.",
+                    "Chào mừng bạn đến với thế giới đồ ăn nhanh! Đăng nhập ngay.",
                     style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
                   ),
-                  const SizedBox(height: 30),
-
-                  // INPUT USERNAME
-                  const Text("Username", style: TextStyle(fontWeight: FontWeight.bold, color: textDark)),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: "Nhập username",
-                      filled: true,
-                      fillColor: inputBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    ),
-                  ),
-
                   const SizedBox(height: 20),
 
-                  // INPUT PASSWORD
-                  const Text("Password", style: TextStyle(fontWeight: FontWeight.bold, color: textDark)),
-                  const SizedBox(height: 8),
-                  TextField(
+                  // Username
+                  CustomTextField(
+                    title: "Username", 
+                    controller: _usernameController, hintText: "Nhập username"
+                  ),
+
+                  // Password
+                  CustomTextField(
+                    title: "Password",
                     controller: _passwordController,
+                    hintText: "Nhập password",
                     obscureText: _obscurePassword,
-                    decoration: InputDecoration(
-                      hintText: "Nhập password",
-                      filled: true,
-                      fillColor: inputBg,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(15),
-                        borderSide: BorderSide.none,
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                          color: primaryOrange,
-                        ),
-                        onPressed: () {
-                          setState(() {
-                            _obscurePassword = !_obscurePassword;
-                          });
-                        },
-                      ),
+                    suffixIcon: IconButton(
+                      icon: Icon(_obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined, color: AppColors.primaryOrange),
+                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword)
                     ),
                   ),
 
-                  // FORGOT PASSWORD
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Xử lý quên mật khẩu
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (context) => const ForgotPassScreen()),
+                        );
                       },
-                      child: const Text(
-                        "Forget Password",
-                        style: TextStyle(color: primaryOrange, fontWeight: FontWeight.bold),
-                      ),
+                      child: const Text("Forget Password", style: TextStyle(color: AppColors.primaryOrange, fontWeight: FontWeight.bold)),
                     ),
                   ),
+                  const SizedBox(height: 20),
 
-                  const SizedBox(height: 50),
-
-                  // BUTTON ĐĂNG NHẬP
-                  SizedBox(
-                    width: double.infinity,
-                    height: 55,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _handleLogin,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryOrange,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        elevation: 3,
-                      ),
-                      child: _isLoading
-                          ? const CircularProgressIndicator(color: Colors.white)
-                          : const Text(
-                              "Đăng Nhập",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
-                            ),
-                    ),
+                  // Nút đăng nhập dùng chung
+                  PrimaryButton(
+                    text: "Đăng Nhập",
+                    isLoading: _isLoading,
+                    onPressed: _handleLogin,
                   ),
 
                   const SizedBox(height: 20),
-
-                  // SIGN UP LINK
-                  const Center(child: Text("or sign up with", style: TextStyle(color: Colors.grey))),
-                  const SizedBox(height: 5),
                   
-                  // Social Icons
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildSocialButton("assets/google_Icon.jpg", Colors.white),
-                      const SizedBox(width: 10),
-                      _buildSocialButton("assets/facebook_Icon.jpg", Colors.white),
-                    ],
-                  ),
+                  // Social Buttons dùng chung
+                  const SocialLoginSection(),
 
-                  const SizedBox(height: 10),
-
-                  // LINK ĐĂNG KÝ
+                  const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
                       GestureDetector(
-                        onTap: () {
-                          // Điều hướng sang màn hình Đăng ký
-                          Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
-                        },
-                        child: const Text(
-                          "Sign Up",
-                          style: TextStyle(color: primaryOrange, fontWeight: FontWeight.bold),
-                        ),
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RegisterScreen())),
+                        child: const Text("Sign Up", style: TextStyle(color: AppColors.primaryOrange, fontWeight: FontWeight.bold)),
                       ),
                     ],
                   ),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildSocialButton(String assetName, Color bgColor) {
-    return Container(
-      width: 50,
-      height: 50,
-      decoration: BoxDecoration(
-        color: bgColor.withOpacity(0.2),
-        shape: BoxShape.circle,
-      ),
-      child: Padding(padding: EdgeInsets.all(5), child: Image.asset(assetName,fit: BoxFit.contain)),
     );
   }
 }
