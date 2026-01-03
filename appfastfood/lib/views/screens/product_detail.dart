@@ -1,5 +1,4 @@
-import 'dart:ffi';
-
+import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:flutter/material.dart';
 import '../../models/products.dart';
@@ -15,23 +14,77 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
-  bool _isLoggedIn = false; // Biến theo dõi trạng thái đăng nhập
+  bool _isLoggedIn = false;
+  int? _userId;
+  bool isLiking = false;
+  bool isFav = false;
 
   @override
   void initState() {
     super.initState();
-    _checkLoginStatus(); // Kiểm tra token ngay khi vào màn hình
+    _checkFav();
   }
 
-  // Hàm kiểm tra token (xử lý cả trường hợp Future hoặc String thường)
-  void _checkLoginStatus() async {
-    // Giả sử getToken trả về String? hoặc Future<String?>
-    // Dùng await để chắc chắn lấy được giá trị thực
-    final token = await StorageHelper.getToken();
+  void _checkFav() async {
+    await _checkLoginStatus();
+    if (_isLoggedIn) {
+      bool isLiked = await ApiService().checkFav(widget.product.id);
+      if (mounted) {
+        setState(() {
+          isFav = isLiked;
+        });
+      }
+    }
+  }
 
+  void _onLiked() async {
+    if (isLiking) return;
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Bạn cần đăng nhập!")));
+      return;
+    }
+    setState(() {
+      isLiking = true;
+    });
+    if (isFav) {
+      bool success = await ApiService().removeFavorite(widget.product.id);
+      if (success) {
+        setState(() {
+          isFav = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Bạn vừa xóa khỏi món ăn yêu thich")),
+        );
+      }
+    } else {
+      bool success = await ApiService().addFavorites(widget.product.id);
+      if (success) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Đã thêm vào yêu thích!")));
+        setState(() {
+          isFav = true;
+        });
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Thích chưa thành công")));
+      }
+    }
+    setState(() {
+      isLiking = false;
+    });
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final token = await StorageHelper.getToken();
+    final userId = await StorageHelper.getUserId();
     if (mounted) {
       setState(() {
         _isLoggedIn = (token != null && token.isNotEmpty);
+        if (userId != null) _userId = userId;
       });
     }
   }
@@ -52,24 +105,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Màu chủ đạo (Cam)
     const primaryColor = Color(0xFFE95322);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // AppBar trong suốt để hình ảnh tràn lên trên đẹp hơn (tuỳ chọn)
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Hoặc Colors.white
+        backgroundColor: Color(0xFFFFC529),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.black),
-            onPressed: () {},
-          ),
+          if (_isLoggedIn)
+            IconButton(
+              onPressed: () {
+                _onLiked();
+              },
+              icon: isFav
+                  ? Icon(Icons.favorite, color: Colors.red)
+                  : Icon(Icons.favorite_border_outlined, color: Colors.white),
+            ),
         ],
       ),
       // Mở rộng body lên phần AppBar nếu muốn ảnh nền full
@@ -207,16 +263,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     "Mô tả",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.product.description ??
-                        "Chưa có mô tả cho sản phẩm này.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.5,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    width: 400,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 160, 160, 160),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      widget.product.description ??
+                          'Chưa có mô tả cho sản phẩm này.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        height: 1.5,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 10),
 
                   const SizedBox(height: 50),
                   // Khoảng trống dưới cùng để không bị che
@@ -231,10 +298,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         children: [
           Row(
             children: [
+              SizedBox(width: 10),
               Expanded(
                 child: Text(
                   "Tổng tiền: ",
-                  style: TextStyle(color: Colors.grey),
+                  style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                 ),
               ),
               Expanded(

@@ -171,4 +171,67 @@ export default class userController {
             res.status(500).json({ success: false, message: 'Lỗi server' });
         }
     }
+
+    static async addFavorites(req,res){
+        try {
+            const userId = req.userId;
+            const { product_id} = req.body;
+            if(!userId){
+                return res.status(401).send({
+                    success: false,
+                    message: "Chưa đăng nhập hoặc Token không hợp lệ"
+                });
+            }
+            if(!product_id){
+                return res.status(400).send({
+                    success: false,
+                    message: "Thiếu product_id"
+                });
+            }
+           const result = await userModel.addFavorites(userId,product_id);
+           if(result.success == false){
+                return res.status(200).json({ success: true, message: 'Bạn đã thích sản phẩm này rồi'});
+           }
+           return res.status(200).json({ success: true, message: 'Thích sản phẩm thành công'});
+        } catch (error) {
+            console.error("Lỗi Controller",error),
+            res.status(500).json({ success:false, message:"Lỗi server"});
+        }
+    }  
+
+    static async checkFavorites(req,res){
+        try {
+            const userId = req.userId;
+            const { product_id } = req.query;
+
+            const isFav = await userModel.checkFavorites(userId,product_id);
+            return res.status(200).json({
+                success: true,
+                isFavorited: isFav
+            });
+        } catch (error) {
+            console.error(error);
+            return res.status(500).json({ success: false });
+        }
+    }
+
+    static async removeFavorite(req,res){
+        try {
+            const UserId = req.userId;
+            const { product_id } = req.body
+
+            await userModel.removeFavorites(UserId,product_id);
+
+            return res.status(200).json({
+                success: true,
+                message: 'Đã xóa yêu thích'
+            });
+
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi server'
+            });
+        }
+    }
 }

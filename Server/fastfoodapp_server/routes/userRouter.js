@@ -11,5 +11,7 @@ userRouter.post('/register', userController.register);
 // Protected routes (Cần Token)
 userRouter.get('/profile', auth, userController.profile);
 userRouter.post('/logout', auth, userController.logout);
-
+userRouter.post('/favorites/add',auth,userController.addFavorites);
+userRouter.get('/favorites/check',auth,userController.checkFavorites);
+userRouter.post('/favorites/remove',auth,userController.removeFavorite);
 export default userRouter;

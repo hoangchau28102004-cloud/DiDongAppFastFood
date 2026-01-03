@@ -4,7 +4,7 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.15:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.100.248:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -21,7 +21,11 @@ class ApiService {
       if (response.statusCode == 200 &&
           jsonResponse['success'] == true &&
           jsonResponse['token'] != null) {
+        Map<String, dynamic> userdata = jsonResponse['user'];
         await StorageHelper.saveToke(jsonResponse['token']);
+        await StorageHelper.saveFullname(userdata['fullname']);
+        await StorageHelper.saveUserId(userdata['user_id']);
+        await StorageHelper.saveImage(userdata['Image']);
         return jsonResponse;
       } else {
         throw Exception(jsonResponse['message'] ?? 'Đăng nhập thất bại');
@@ -69,5 +73,80 @@ class ApiService {
       throw "Error not found product $e";
     }
     return null;
+  }
+
+  Future<bool> addFavorites(int productId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) {
+        return false;
+      }
+      final url = Uri.parse('$baseUrl/api/favorites/add');
+      final res = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'product_id': productId}),
+      );
+      if (res.statusCode == 200) {
+        final jsonRes = jsonDecode(res.body);
+        if (jsonRes['success'] == true) {
+          return true;
+        }
+      }
+      return false;
+    } catch (e) {
+      print("Lỗi addFavorite $e");
+      return false;
+    }
+  }
+
+  Future<bool> checkFav(int productId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+      final res = await http.get(
+        Uri.parse('$baseUrl/api/favorites/check?product_id=$productId'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (res.statusCode == 200) {
+        final jsonRes = jsonDecode(res.body);
+        return jsonRes['isFavorited'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Lỗi check fav $e');
+      return false;
+    }
+  }
+
+  Future<bool> removeFavorite(int productId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final res = await http.post(
+        Uri.parse('$baseUrl/api/favorites/remove'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'product_id': productId}),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Lỗi removeFavoreites $e');
+      return false;
+    }
   }
 }

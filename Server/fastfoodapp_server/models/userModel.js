@@ -67,4 +67,34 @@ export default class userModel {
             throw new Error('Database query failed: ' + error.message);
         }
     }
+
+    static async addFavorites(userId,productId){
+        try{
+            const [check] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?', [userId,productId]);
+            if(check.length > 0){
+                return { success: false, message: 'Sản phẩm này đã thích rồi' };
+            }
+            const [result] = await execute('INSERT INTO favorites(user_id,product_id,liked_at) VALUES(?,?,NOW())',
+                [userId,productId]
+            );
+            return { success: true, message:"Vừa thích sản phẩm này" };
+        }catch(e){
+            console.error("Lỗi model Add Favorites")
+            throw e;
+        }
+    }
+
+    static async checkFavorites(userId,productId){
+        const [rows] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?',[userId,productId]);
+        return rows.length > 0;
+    }
+
+    static async removeFavorites(userId,product_id){
+        try {
+            const [result] = await execute('DELETE FROM favorites WHERE user_id = ? AND product_id = ?',[userId,product_id]);
+            return result.affectedRows > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
 }
