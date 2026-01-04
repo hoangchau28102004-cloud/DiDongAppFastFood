@@ -1,5 +1,6 @@
-import 'package:appfastfood/views/screens/home_screen.dart';
+import 'package:appfastfood/views/screens/users/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'main_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -21,7 +22,7 @@ class _SplashScreenState extends State<SplashScreen> {
     if (!mounted) return;
     Navigator.pushReplacement(
       context,
-      MaterialPageRoute(builder: (context) => const HomePageScreen()),
+      MaterialPageRoute(builder: (context) => const MainScreen()),
     );
   }
 

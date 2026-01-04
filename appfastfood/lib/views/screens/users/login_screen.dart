@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../service/api_service.dart';
-import '../../models/users.dart';
-import '../screens/home_screen.dart';
+import '../../../service/api_service.dart';
+import '../../../models/users.dart';
+import 'home_screen.dart';
+import 'main_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -23,8 +24,10 @@ class _LoginScreenState extends State<LoginScreen> {
   Future<void> _handleLogin() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Vui lòng nhập Username và Password"), 
-        backgroundColor: Colors.orange),
+        const SnackBar(
+          content: Text("Vui lòng nhập Username và Password"),
+          backgroundColor: Colors.orange,
+        ),
       );
       return;
     }
@@ -48,9 +51,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Đăng nhập thành công!"), backgroundColor: Colors.green),
+            const SnackBar(
+              content: Text("Đăng nhập thành công!"),
+              backgroundColor: Colors.green,
+            ),
           );
-          Navigator.pushAndRemoveUntil(context,MaterialPageRoute(builder: (context) => const HomePageScreen()),(route) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const MainScreen()),
+            (route) => false,
+          );
         }
       }
     } catch (e) {
@@ -80,9 +90,7 @@ class _LoginScreenState extends State<LoginScreen> {
             // PHẦN HEADER
             Container(
               height: 150,
-              decoration: const BoxDecoration(
-                color: yellowHeader,
-              ),
+              decoration: const BoxDecoration(color: yellowHeader),
               child: SafeArea(
                 child: Stack(
                   children: [
@@ -90,7 +98,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       left: 10,
                       top: 10,
                       child: IconButton(
-                        icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+                        icon: const Icon(
+                          Icons.arrow_back_ios,
+                          color: Colors.white,
+                        ),
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
@@ -119,7 +130,8 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text("Welcome",
+                  const Text(
+                    "Welcome",
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -129,12 +141,22 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 10),
                   const Text(
                     "Chào mừng bạn đến với thế giới đồ ăn nhanh! Đăng nhập ngay để không bỏ lỡ những ưu đãi cực 'hời' dành riêng cho bạn hôm nay.",
-                    style: TextStyle(fontSize: 14, color: Colors.grey, height: 1.5),
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: Colors.grey,
+                      height: 1.5,
+                    ),
                   ),
                   const SizedBox(height: 30),
 
                   // INPUT USERNAME
-                  const Text("Username", style: TextStyle(fontWeight: FontWeight.bold, color: textDark)),
+                  const Text(
+                    "Username",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _usernameController,
@@ -146,14 +168,23 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                     ),
                   ),
 
                   const SizedBox(height: 20),
 
                   // INPUT PASSWORD
-                  const Text("Password", style: TextStyle(fontWeight: FontWeight.bold, color: textDark)),
+                  const Text(
+                    "Password",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: textDark,
+                    ),
+                  ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
@@ -166,10 +197,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         borderRadius: BorderRadius.circular(15),
                         borderSide: BorderSide.none,
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                          _obscurePassword
+                              ? Icons.visibility_off_outlined
+                              : Icons.visibility_outlined,
                           color: primaryOrange,
                         ),
                         onPressed: () {
@@ -190,7 +226,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       },
                       child: const Text(
                         "Forget Password",
-                        style: TextStyle(color: primaryOrange, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: primaryOrange,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ),
@@ -214,7 +253,11 @@ class _LoginScreenState extends State<LoginScreen> {
                           ? const CircularProgressIndicator(color: Colors.white)
                           : const Text(
                               "Đăng Nhập",
-                              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
                             ),
                     ),
                   ),
@@ -222,16 +265,27 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 10),
 
                   // SIGN UP LINK
-                  const Center(child: Text("or sign up with", style: TextStyle(color: Colors.grey))),
+                  const Center(
+                    child: Text(
+                      "or sign up with",
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  ),
                   const SizedBox(height: 10),
-                  
+
                   // Social Icons
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      _buildSocialButton("assets/google_Icon.jpg", Colors.white),
+                      _buildSocialButton(
+                        "assets/google_Icon.jpg",
+                        Colors.white,
+                      ),
                       const SizedBox(width: 20),
-                      _buildSocialButton("assets/facebook_Icon.jpg", Colors.white),
+                      _buildSocialButton(
+                        "assets/facebook_Icon.jpg",
+                        Colors.white,
+                      ),
                     ],
                   ),
 
@@ -241,7 +295,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text("Don't have an account? ", style: TextStyle(color: Colors.grey)),
+                      const Text(
+                        "Don't have an account? ",
+                        style: TextStyle(color: Colors.grey),
+                      ),
                       GestureDetector(
                         onTap: () {
                           // Điều hướng sang màn hình Đăng ký
@@ -249,7 +306,10 @@ class _LoginScreenState extends State<LoginScreen> {
                         },
                         child: const Text(
                           "Sign Up",
-                          style: TextStyle(color: primaryOrange, fontWeight: FontWeight.bold),
+                          style: TextStyle(
+                            color: primaryOrange,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
                     ],
@@ -271,7 +331,10 @@ class _LoginScreenState extends State<LoginScreen> {
         color: bgColor.withOpacity(0.2),
         shape: BoxShape.circle,
       ),
-      child: Padding(padding: EdgeInsets.all(10), child: Image.asset(assetName)),
+      child: Padding(
+        padding: EdgeInsets.all(10),
+        child: Image.asset(assetName),
+      ),
     );
   }
 }

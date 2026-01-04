@@ -1,7 +1,7 @@
-import 'package:appfastfood/views/screens/product_detail.dart';
-import 'package:appfastfood/views/screens/splash_screen.dart';
+import 'package:appfastfood/views/screens/users/product_detail.dart';
+import 'package:appfastfood/views/screens/users/splash_screen.dart';
 import 'package:flutter/material.dart';
-import 'views/screens/home_screen.dart';
+import 'views/screens/users/home_screen.dart';
 
 void main() {
   runApp(const MyApp());
