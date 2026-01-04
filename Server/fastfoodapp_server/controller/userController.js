@@ -203,7 +203,6 @@ export default class userController {
         }
     }
 
-    // Thêm sản phẩm vào yêu thích
     static async addFavorites(req,res){
         try {
             const userId = req.userId;
@@ -231,7 +230,6 @@ export default class userController {
         }
     }  
 
-    // Kiểm tra sản phẩm đã được yêu thích chưa
     static async checkFavorites(req,res){
         try {
             const userId = req.userId;
@@ -248,7 +246,6 @@ export default class userController {
         }
     }
 
-    // Xóa sản phẩm khỏi yêu thích
     static async removeFavorite(req,res){
         try {
             const UserId = req.userId;

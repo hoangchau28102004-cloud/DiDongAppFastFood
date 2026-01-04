@@ -1,8 +1,8 @@
 import 'dart:convert';
 import 'package:appfastfood/views/screens/home_screen.dart';
+import 'package:appfastfood/views/screens/users/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../screens/welcome_screen.dart'; 
 import '../../models/users.dart';
 
 class SideMenu extends StatefulWidget {

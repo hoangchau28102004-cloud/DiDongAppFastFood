@@ -4,10 +4,10 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.1.17:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.99.51:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -21,14 +21,8 @@ class ApiService {
       );
 
       final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
-      if (response.statusCode == 200 &&
-          jsonResponse['success'] == true &&
-          jsonResponse['token'] != null) {
-        Map<String, dynamic> userdata = jsonResponse['user'];
-        await StorageHelper.saveToke(jsonResponse['token']);
-        await StorageHelper.saveFullname(userdata['fullname']);
-        await StorageHelper.saveUserId(userdata['user_id']);
-        await StorageHelper.saveImage(userdata['Image']);
+
+      if (response.statusCode == 200 && jsonResponse['success'] == true) {
         return jsonResponse;
       } else {
         throw Exception(jsonResponse['message'] ?? 'Đăng nhập thất bại');

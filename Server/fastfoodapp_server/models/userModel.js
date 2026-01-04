@@ -69,7 +69,6 @@ export default class userModel {
         }
     }
 
-    // Thêm sản phẩm vào yêu thích
     static async addFavorites(userId,productId){
         try{
             const [check] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?', [userId,productId]);
@@ -86,13 +85,11 @@ export default class userModel {
         }
     }
 
-    // Kiểm tra sản phẩm đã được yêu thích chưa
     static async checkFavorites(userId,productId){
         const [rows] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?',[userId,productId]);
         return rows.length > 0;
     }
 
-    // Xóa sản phẩm khỏi yêu thích
     static async removeFavorites(userId,product_id){
         try {
             const [result] = await execute('DELETE FROM favorites WHERE user_id = ? AND product_id = ?',[userId,product_id]);

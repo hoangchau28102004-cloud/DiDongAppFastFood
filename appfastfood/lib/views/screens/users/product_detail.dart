@@ -1,7 +1,7 @@
+import 'package:appfastfood/models/products.dart';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:flutter/material.dart';
-import '../../models/products.dart';
 
 class ProductDetailScreen extends StatefulWidget {
   final Product product;
@@ -119,9 +119,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         actions: [
           if (_isLoggedIn)
             IconButton(
-              onPressed: () {
-                _onLiked();
-              },
+              onPressed: () => _onLiked(),
               icon: isFav
                   ? Icon(Icons.favorite, color: Colors.red)
                   : Icon(Icons.favorite_border_outlined, color: Colors.white),
@@ -263,7 +261,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     "Mô tả",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  Container(
+                Container(
                     padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                     width: 400,
                     height: 150,
@@ -274,7 +272,8 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                     child: Text(
-                      widget.product.description,
+                      widget.product.description ??
+                          'Chưa có mô tả cho sản phẩm này.',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],

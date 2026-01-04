@@ -1,9 +1,9 @@
 import 'package:appfastfood/service/api_service.dart';
-import 'package:appfastfood/views/screens/login_screen.dart';
+import 'package:appfastfood/views/screens/users/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import '../../utils/app_colors.dart';
-import '../widget/auth_widgets.dart';
+import '../../../utils/app_colors.dart';
+import '../../widget/auth_widgets.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});

@@ -86,10 +86,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
 
   // Hàm load dữ liệu cho Favorite
   Future<List<Product>> _loadFavData() async {
-    setState(() {
-      _favoriteFuture = _apiService.getFavoriteList();
-    });
-    return _favoriteFuture;
+    return await _apiService.getFavoriteList();
   }
 
   // Hàm lọc theo danh mục
