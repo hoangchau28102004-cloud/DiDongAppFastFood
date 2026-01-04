@@ -1,4 +1,6 @@
 import 'dart:convert';
+import 'package:appfastfood/views/screens/users/forgot_pass_screen.dart';
+import 'package:appfastfood/views/screens/users/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../service/api_service.dart';
@@ -20,7 +22,12 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
   final ApiService _apiService = ApiService();
 
-  // Hàm xử lý Đăng Nhập
+  // --- SỬA LỖI 2: Đưa các hằng số màu sắc lên đây (Class Level) ---
+  static const Color yellowHeader = Color(0xFFFCD057);
+  static const Color inputBg = Color(0xFFFEF5D3);
+  static const Color primaryOrange = Color(0xFFE95322);
+  static const Color textDark = Color(0xFF4A3B2C);
+
   Future<void> _handleLogin() async {
     if (_usernameController.text.isEmpty || _passwordController.text.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -31,20 +38,15 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       return;
     }
-
     setState(() => _isLoading = true);
-
     try {
       final result = await _apiService.login(
         _usernameController.text.trim(),
         _passwordController.text.trim(),
       );
-
       if (result['success'] == true) {
         User user = User.fromJson(result['user']);
         String token = result['token'];
-
-        // Lưu vào SharedPreferences
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('access_token', token);
         await prefs.setString('user_data', jsonEncode(user.toJson()));
@@ -67,8 +69,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (mounted) {
         String msg = e.toString().replaceAll("Exception: ", "");
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(msg), backgroundColor: Colors.red),
-        );
+            SnackBar(content: Text(msg), backgroundColor: Colors.red));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -77,10 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    const Color yellowHeader = Color(0xFFFCD057);
-    const Color inputBg = Color(0xFFFEF5D3);
-    const Color primaryOrange = Color(0xFFE95322);
-    const Color textDark = Color(0xFF4A3B2C);
+    // Đã xóa khai báo màu ở đây để tránh lỗi scope
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -105,7 +103,6 @@ class _LoginScreenState extends State<LoginScreen> {
                         onPressed: () => Navigator.pop(context),
                       ),
                     ),
-
                     const Center(
                       child: Padding(
                         padding: EdgeInsets.only(bottom: 20),
@@ -124,7 +121,6 @@ class _LoginScreenState extends State<LoginScreen> {
               ),
             ),
 
-            // PHẦN BODY
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 30),
               child: Column(
@@ -188,6 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 8),
                   TextField(
                     controller: _passwordController,
+                    // --- SỬA LỖI 1: Xóa dòng hintText sai ở đây ---
                     obscureText: _obscurePassword,
                     decoration: InputDecoration(
                       hintText: "Nhập password",
@@ -217,12 +214,15 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // FORGOT PASSWORD
                   Align(
                     alignment: Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {
-                        // Xử lý quên mật khẩu
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (context) => const ForgotPassScreen()),
+                        );
                       },
                       child: const Text(
                         "Forget Password",
@@ -233,6 +233,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ),
+                  const SizedBox(height: 20),
 
                   const SizedBox(height: 50),
 
@@ -289,9 +290,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     ],
                   ),
 
-                  const SizedBox(height: 10),
-
-                  // LINK ĐĂNG KÝ
+                  const SizedBox(height: 15),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -302,7 +301,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       GestureDetector(
                         onTap: () {
                           // Điều hướng sang màn hình Đăng ký
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+                          Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                  builder: (context) => RegisterScreen()));
                         },
                         child: const Text(
                           "Sign Up",
@@ -316,7 +318,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ],
               ),
-            ),
+            )
           ],
         ),
       ),
@@ -332,7 +334,7 @@ class _LoginScreenState extends State<LoginScreen> {
         shape: BoxShape.circle,
       ),
       child: Padding(
-        padding: EdgeInsets.all(10),
+        padding: const EdgeInsets.all(10),
         child: Image.asset(assetName),
       ),
     );

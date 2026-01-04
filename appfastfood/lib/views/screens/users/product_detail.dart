@@ -1,3 +1,5 @@
+import 'package:appfastfood/service/api_service.dart';
+import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:flutter/material.dart';
 import '../../../models/products.dart';
 
@@ -12,6 +14,80 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
+  bool _isLoggedIn = false;
+  int? _userId;
+  bool isLiking = false;
+  bool isFav = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkFav();
+  }
+
+  void _checkFav() async {
+    await _checkLoginStatus();
+    if (_isLoggedIn) {
+      bool isLiked = await ApiService().checkFav(widget.product.id);
+      if (mounted) {
+        setState(() {
+          isFav = isLiked;
+        });
+      }
+    }
+  }
+
+  void _onLiked() async {
+    if (isLiking) return;
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Bạn cần đăng nhập!")));
+      return;
+    }
+    setState(() {
+      isLiking = true;
+    });
+    if (isFav) {
+      bool success = await ApiService().removeFavorite(widget.product.id);
+      if (success) {
+        setState(() {
+          isFav = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Bạn vừa xóa khỏi món ăn yêu thich")),
+        );
+      }
+    } else {
+      bool success = await ApiService().addFavorites(widget.product.id);
+      if (success) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Đã thêm vào yêu thích!")));
+        setState(() {
+          isFav = true;
+        });
+      } else {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text("Thích chưa thành công")));
+      }
+    }
+    setState(() {
+      isLiking = false;
+    });
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final token = await StorageHelper.getToken();
+    final userId = await StorageHelper.getUserId();
+    if (mounted) {
+      setState(() {
+        _isLoggedIn = (token != null && token.isNotEmpty);
+        if (userId != null) _userId = userId;
+      });
+    }
+  }
 
   void _incrementQuantity() {
     setState(() {
@@ -29,24 +105,27 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Màu chủ đạo (Cam)
     const primaryColor = Color(0xFFE95322);
 
     return Scaffold(
       backgroundColor: Colors.white,
-      // AppBar trong suốt để hình ảnh tràn lên trên đẹp hơn (tuỳ chọn)
       appBar: AppBar(
-        backgroundColor: Colors.transparent, // Hoặc Colors.white
+        backgroundColor: Color(0xFFFFC529),
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
           onPressed: () => Navigator.pop(context),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.favorite_border, color: Colors.black),
-            onPressed: () {},
-          ),
+          if (_isLoggedIn)
+            IconButton(
+              onPressed: () {
+                _onLiked();
+              },
+              icon: isFav
+                  ? Icon(Icons.favorite, color: Colors.red)
+                  : Icon(Icons.favorite_border_outlined, color: Colors.white),
+            ),
         ],
       ),
       // Mở rộng body lên phần AppBar nếu muốn ảnh nền full
@@ -103,17 +182,6 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Expanded(
-                        child: Text(
-                          widget.product.name,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            height: 1.2,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
                       Text(
                         "${widget.product.price}đ",
                         style: const TextStyle(
@@ -122,10 +190,45 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                           color: primaryColor,
                         ),
                       ),
+                      const SizedBox(width: 10),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildQuantityButton(
+                            Icons.remove,
+                            _decrementQuantity,
+                          ),
+                          Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            child: Text(
+                              "$_quantity",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          _buildQuantityButton(Icons.add, _incrementQuantity),
+                        ],
+                      ),
                     ],
                   ),
 
                   const SizedBox(height: 15),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          widget.product.name,
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  SizedBox(height: 20),
 
                   // Rating và Thời gian (Giả lập)
                   Row(
@@ -160,89 +263,122 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                     "Mô tả",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.product.description ??
-                        "Chưa có mô tả cho sản phẩm này.",
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: Colors.grey[600],
-                      height: 1.5,
+                  Container(
+                    padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    width: 400,
+                    height: 150,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: const Color.fromARGB(255, 160, 160, 160),
+                        width: 1,
+                      ),
+                    ),
+                    child: Text(
+                      widget.product.description ??
+                          'Chưa có mô tả cho sản phẩm này.',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.grey[600],
+                        height: 1.5,
+                      ),
                     ),
                   ),
+                  const SizedBox(height: 10),
 
-                  const SizedBox(height: 30),
-
-                  // Chọn số lượng
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildQuantityButton(Icons.remove, _decrementQuantity),
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 20),
-                        child: Text(
-                          "$_quantity",
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      _buildQuantityButton(Icons.add, _incrementQuantity),
-                    ],
-                  ),
-
-                  const SizedBox(
-                    height: 20,
-                  ), // Khoảng trống dưới cùng để không bị che
+                  const SizedBox(height: 50),
+                  // Khoảng trống dưới cùng để không bị che
                 ],
               ),
             ),
           ],
         ),
       ),
-
-      // 3. NÚT ADD TO CART DÍNH DƯỚI ĐÁY
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 10,
-              offset: const Offset(0, -3),
-            ),
-          ],
-        ),
-        child: ElevatedButton(
-          onPressed: () {
-            // Xử lý thêm vào giỏ hàng tại đây
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text(
-                  "Đã thêm $_quantity ${widget.product.name} vào giỏ!",
+      bottomNavigationBar: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              SizedBox(width: 10),
+              Expanded(
+                child: Text(
+                  "Tổng tiền: ",
+                  style: TextStyle(color: const Color.fromARGB(255, 0, 0, 0)),
                 ),
               ),
-            );
-          },
-          style: ElevatedButton.styleFrom(
-            backgroundColor: primaryColor,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(15),
-            ),
+              Expanded(
+                child: Align(
+                  alignment: AlignmentGeometry.bottomRight,
+                  child: Text(
+                    "${widget.product.price * _quantity} VNĐ",
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ),
+              SizedBox(width: 10),
+            ],
           ),
-          child: const Text(
-            "Thêm vào giỏ hàng",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.white,
-            ),
+          SizedBox(height: 10),
+          Divider(),
+          Row(
+            children: [
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(onPressed: () {}, icon: Icon(Icons.chat)),
+              ),
+              SizedBox(
+                height: 45, // QUAN TRỌNG: Phải set chiều cao cho đường kẻ
+                child: VerticalDivider(
+                  color: primaryColor, // Màu xám
+                  thickness: 1, // Độ dày nét vẽ
+                  width:
+                      20, // Khoảng cách đệm (giống margin left/right gộp lại)
+                ),
+              ),
+              Container(
+                padding: EdgeInsets.symmetric(horizontal: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: IconButton(
+                  onPressed: () {},
+                  icon: Icon(Icons.shopping_cart_checkout_outlined),
+                ),
+              ),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: () {
+                    if (_isLoggedIn) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Mua thành công sản phẩm"),
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Vui lòng đăng nhập tài khoản"),
+                        ),
+                      );
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    padding: EdgeInsets.all(10),
+                    backgroundColor: primaryColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadiusGeometry.circular(10),
+                    ),
+                  ),
+                  child: Text("Mua với voucher"),
+                ),
+              ),
+              SizedBox(width: 10),
+            ],
           ),
-        ),
+        ],
       ),
     );
   }
@@ -251,13 +387,13 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
   Widget _buildQuantityButton(IconData icon, VoidCallback onPressed) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(10),
+        color: Color.fromARGB(255, 244, 148, 3),
+        borderRadius: BorderRadius.circular(50),
       ),
       child: IconButton(
         onPressed: onPressed,
         icon: Icon(icon, color: Colors.black),
-        splashRadius: 20,
+        // splashRadius: 20,
       ),
     );
   }

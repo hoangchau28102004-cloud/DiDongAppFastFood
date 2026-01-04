@@ -1,3 +1,4 @@
+import 'package:appfastfood/views/screens/users/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 
@@ -8,6 +9,15 @@ class WelcomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFE95322),
+      appBar: AppBar(
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: Icon(Icons.arrow_back_ios_new),
+        ),
+        backgroundColor: const Color(0xFFE95322),
+      ),
       body: SafeArea(
         child: SizedBox(
           width: double.infinity,
@@ -80,7 +90,12 @@ class WelcomeScreen extends StatelessWidget {
                   height: 55,
                   child: ElevatedButton(
                     onPressed: () {
-                      print("Bấm Đăng Ký");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const RegisterScreen(),
+                        ),
+                      );
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFC529),

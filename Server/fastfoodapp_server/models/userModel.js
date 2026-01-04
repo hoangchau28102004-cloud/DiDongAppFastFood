@@ -67,4 +67,63 @@ export default class userModel {
             throw new Error('Database query failed: ' + error.message);
         }
     }
+
+    static async addFavorites(userId,productId){
+        try{
+            const [check] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?', [userId,productId]);
+            if(check.length > 0){
+                return { success: false, message: 'Sản phẩm này đã thích rồi' };
+            }
+            const [result] = await execute('INSERT INTO favorites(user_id,product_id,liked_at) VALUES(?,?,NOW())',
+                [userId,productId]
+            );
+            return { success: true, message:"Vừa thích sản phẩm này" };
+        }catch(e){
+            console.error("Lỗi model Add Favorites")
+            throw e;
+        }
+    }
+
+    static async checkFavorites(userId,productId){
+        const [rows] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?',[userId,productId]);
+        return rows.length > 0;
+    }
+
+    static async removeFavorites(userId,product_id){
+        try {
+            const [result] = await execute('DELETE FROM favorites WHERE user_id = ? AND product_id = ?',[userId,product_id]);
+            return result.affectedRows > 0;
+        } catch (error) {
+            throw error;
+        }
+    }
+
+    // Tìm user bằng Email để gửi OTP
+    static async findByEmail(email) {
+        try {
+            const sql = `
+                SELECT 
+                    a.account_id, a.Username, a.status,
+                    u.user_id, u.fullname, u.email
+                FROM Users u
+                JOIN Account a ON u.account_id = a.account_id
+                WHERE u.email = ?
+            `;
+            const [rows] = await execute(sql, [email]);
+            return rows[0] ?? null;
+        } catch (error) {
+            throw new Error('Database query failed: ' + error.message);
+        }
+    }
+
+    // Cập nhật mật khẩu mới
+    static async updatePassword(accountId, newHashedPassword) {
+        try {
+            const sql = 'UPDATE Account SET password = ? WHERE account_id = ?';
+            await execute(sql, [newHashedPassword, accountId]);
+            return true;
+        } catch (error) {
+            throw new Error('Update password failed: ' + error.message);
+        }
+    }
 }
