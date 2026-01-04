@@ -274,8 +274,7 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                       ),
                     ),
                     child: Text(
-                      widget.product.description ??
-                          'Chưa có mô tả cho sản phẩm này.',
+                      widget.product.description,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.grey[600],

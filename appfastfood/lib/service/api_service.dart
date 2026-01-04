@@ -4,11 +4,12 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.100.248:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.1.17:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
 
+  // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final url = Uri.parse('$urlEdit/api/login');
@@ -37,6 +38,7 @@ class ApiService {
     }
   }
 
+  // Đăng ký tài khoản
   Future<Map<String, dynamic>> register(
     String username,
     String password,
@@ -73,6 +75,7 @@ class ApiService {
     }
   }
 
+  // Gửi OTP
   Future<Map<String, dynamic>> sendOtp(String email) async {
     try {
       final url = Uri.parse('$urlEdit/api/send-otp');
@@ -94,6 +97,7 @@ class ApiService {
     }
   }
 
+  // Đặt lại mật khẩu
   Future<Map<String, dynamic>> resetPassword(
     String email,
     String otp,
@@ -123,6 +127,7 @@ class ApiService {
     }
   }
 
+  // Lấy tất cả sản phẩm
   Future<List<Product>> getAllProducts() async {
     try {
       final response = await http.get(Uri.parse('$urlEdit/api/products'));
@@ -145,6 +150,7 @@ class ApiService {
     }
   }
 
+  // Lấy chi tiết sản phẩm theo ID
   Future<Product?> getProductById(String id) async {
     try {
       final res = await http.get(Uri.parse('$urlEdit/api/products/$id'));
@@ -163,13 +169,14 @@ class ApiService {
     return null;
   }
 
+  // Favorite APIs
   Future<bool> addFavorites(int productId) async {
     try {
       final token = await StorageHelper.getToken();
       if (token == null) {
         return false;
       }
-      final url = Uri.parse('$baseUrl/api/favorites/add');
+      final url = Uri.parse('$urlEdit/api/favorites/add');
       final res = await http.post(
         url,
         headers: {
@@ -191,12 +198,13 @@ class ApiService {
     }
   }
 
+  // Kiểm tra favorite
   Future<bool> checkFav(int productId) async {
     try {
       final token = await StorageHelper.getToken();
       if (token == null) return false;
       final res = await http.get(
-        Uri.parse('$baseUrl/api/favorites/check?product_id=$productId'),
+        Uri.parse('$urlEdit/api/favorites/check?product_id=$productId'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -213,13 +221,14 @@ class ApiService {
     }
   }
 
+  // Xóa favorite
   Future<bool> removeFavorite(int productId) async {
     try {
       final token = await StorageHelper.getToken();
       if (token == null) return false;
 
       final res = await http.post(
-        Uri.parse('$baseUrl/api/favorites/remove'),
+        Uri.parse('$urlEdit/api/favorites/remove'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -235,6 +244,34 @@ class ApiService {
     } catch (e) {
       print('Lỗi removeFavoreites $e');
       return false;
+    }
+  }
+
+  // Lấy danh sách sản phẩm yêu thích
+  Future<List<Product>> getFavoriteList() async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return [];
+
+      final res = await http.get(
+        Uri.parse('$urlEdit/api/favorites/list'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (res.statusCode == 200) {
+        final jsonRes = jsonDecode(res.body);
+        if (jsonRes['success'] == true) {
+          List<dynamic> data = jsonRes['data'];
+          return data.map((item) => Product.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print('Lỗi getFavoriteList: $e');
+      return [];
     }
   }
 }

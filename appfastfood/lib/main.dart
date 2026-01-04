@@ -1,4 +1,3 @@
-import 'package:appfastfood/views/screens/product_detail.dart';
 import 'package:appfastfood/views/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 

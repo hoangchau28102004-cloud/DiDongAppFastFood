@@ -203,6 +203,7 @@ export default class userController {
         }
     }
 
+    // Thêm sản phẩm vào yêu thích
     static async addFavorites(req,res){
         try {
             const userId = req.userId;
@@ -230,6 +231,7 @@ export default class userController {
         }
     }  
 
+    // Kiểm tra sản phẩm đã được yêu thích chưa
     static async checkFavorites(req,res){
         try {
             const userId = req.userId;
@@ -246,6 +248,7 @@ export default class userController {
         }
     }
 
+    // Xóa sản phẩm khỏi yêu thích
     static async removeFavorite(req,res){
         try {
             const UserId = req.userId;
@@ -263,6 +266,23 @@ export default class userController {
                 success: false,
                 message: 'Lỗi server'
             });
+        }
+    }
+
+    // Lấy danh sách sản phẩm yêu thích của User
+    static async getFavoriteList(req, res) {
+        try{
+            const userId = req.userId;
+
+            const listFavorites = await userModel.getFavoritesByUserId(userId);
+
+            return  res.status(200).json({
+                success: true,
+                data: listFavorites
+            });
+        }catch(error){
+            console.error(error);
+            res.status(500).json({ success: false, message: 'Lỗi server' });
         }
     }
 
