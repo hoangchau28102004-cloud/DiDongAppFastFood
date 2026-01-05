@@ -17,60 +17,60 @@ class FavoriteContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: RefreshIndicator(
-        onRefresh: onRefresh,
-        child: FutureBuilder<List<Product>>(
-          future: productsFuture, 
-          builder: (context, snapshot) {
-            if(snapshot.connectionState == ConnectionState.waiting){
-              return const Center(child: CircularProgressIndicator());
-            } else if (snapshot.hasError) {
-              return Center(child: Text('Lỗi: ${snapshot.error}'));
-            } else if(!snapshot.hasData || snapshot.data!.isEmpty){
-              return ListView(
-                children: const [
-                  SizedBox(height: 200),
-                  Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(Icons.favorite_border, size: 80, color: Colors.grey),
-                        SizedBox(height: 10),
-                        Text(
-                          'Chưa có sản phẩm yêu thích', 
-                          style: TextStyle(fontSize: 18, color: Colors.grey)
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              );
-            }
-            final List<Product> realFavoriteList = snapshot.data!;
-
-            return ListView.separated(
-              padding: const EdgeInsets.all(10),
-              separatorBuilder: (context, index) => const SizedBox(height: 20), 
-              itemCount: realFavoriteList.length,
-              itemBuilder:(context, index) {
-                final product = realFavoriteList[index];
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductDetailScreen(product: product),
+    return RefreshIndicator(
+      onRefresh: onRefresh,
+      child: FutureBuilder<List<Product>>(
+        future: productsFuture, 
+        builder: (context, snapshot) {
+          if(snapshot.connectionState == ConnectionState.waiting){
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text('Lỗi: ${snapshot.error}'));
+          } else if(!snapshot.hasData || snapshot.data!.isEmpty){
+            return ListView(
+              children: const [
+                SizedBox(height: 200),
+                Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(Icons.favorite_border, size: 80, color: Colors.grey),
+                      SizedBox(height: 10),
+                      Text(
+                        'Chưa có sản phẩm yêu thích', 
+                        style: TextStyle(fontSize: 18, color: Colors.grey)
                       ),
-                    );
-                  },
-                  child: ProductCard(product: product),
-                );
-              } ,
+                    ],
+                  ),
+                ),
+              ],
             );
           }
-        ),
-      )
+          final List<Product> realFavoriteList = snapshot.data!;
+
+          return ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(10),
+            separatorBuilder: (context, index) => const SizedBox(height: 20), 
+            itemCount: realFavoriteList.length,
+            itemBuilder:(context, index) {
+              final product = realFavoriteList[index];
+              return GestureDetector(
+                onTap: () async {
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => ProductDetailScreen(product: product),
+                    ),
+                  );
+                  onRefresh();
+                },
+                child: ProductCard(product: product),
+              );
+            } ,
+          );
+        }
+      ),
     );
   }
 }
