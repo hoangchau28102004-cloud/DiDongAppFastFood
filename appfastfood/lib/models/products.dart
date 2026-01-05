@@ -1,3 +1,5 @@
+import 'package:appfastfood/models/reviews.dart';
+
 class Product {
   final int id;
   final String name;
@@ -7,6 +9,7 @@ class Product {
   final String categoryName;
   final double? averageRating;
   final int? reviewCount;
+  final List<Reviews> review;
 
   Product({
     required this.id,
@@ -17,6 +20,7 @@ class Product {
     required this.categoryName,
     this.averageRating,
     this.reviewCount,
+    this.review = const [],
   });
 
   factory Product.fromJson(Map<String, dynamic> json) {
@@ -30,6 +34,11 @@ class Product {
       averageRating: double.tryParse(json['average_rating'].toString()) ?? 0.0,
       reviewCount: int.tryParse(json['review_count'].toString()) ?? 0,
       categoryName: json['category_name'] ?? '',
+      review:
+          (json['reviews'] as List?)
+              ?.map((item) => Reviews.fromJson(item))
+              .toList() ??
+          [],
     );
   }
 }

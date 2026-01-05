@@ -17,6 +17,20 @@ class ProductModel{
         const [rows] = await execute(sql,[id]);
         return rows[0];
     }
+
+    static async getReviewProductId(id){
+        const sql = `
+            SELECT r.rating, r.description, r.review_date, u.fullname, u.image 
+            FROM reviews r
+            JOIN users u ON r.user_id = u.user_id
+            WHERE r.product_id = ?
+            ORDER BY r.review_date DESC
+        `
+        const [rows] = await execute(sql, [id]);
+        return rows;
+    }
+
+    
 }
 
 export default ProductModel;

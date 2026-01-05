@@ -31,6 +31,10 @@ class ProductController{
                 });
             }
 
+            const reviews = await productsModel.getReviewProductId(id);
+
+            product.reviews = reviews;
+
             return res.status(200).json({
                 success: true,
                 data: product

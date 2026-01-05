@@ -149,7 +149,7 @@ class ApiService {
   }
 
   // Lấy chi tiết sản phẩm theo ID
-  Future<Product?> getProductById(String id) async {
+  Future<Product?> getProductById(int id) async {
     try {
       final res = await http.get(Uri.parse('$urlEdit/api/products/$id'));
 
