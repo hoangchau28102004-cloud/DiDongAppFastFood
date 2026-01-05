@@ -4,7 +4,7 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.99.51:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.1.5:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
@@ -22,7 +22,11 @@ class ApiService {
 
       final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
 
-      if (response.statusCode == 200 && jsonResponse['success'] == true) {
+      if (response.statusCode == 200 &&
+          jsonResponse['success'] == true &&
+          jsonResponse['token'] != null) {
+        await StorageHelper.saveToke(jsonResponse['token']);
+        await StorageHelper.saveUserId(jsonResponse['user']['user_id']);
         return jsonResponse;
       } else {
         throw Exception(jsonResponse['message'] ?? 'Đăng nhập thất bại');
