@@ -1,6 +1,10 @@
+<<<<<<< HEAD
 import 'dart:io';
 
 import 'package:appfastfood/models/user.dart';
+=======
+import 'package:appfastfood/models/cartItem.dart';
+>>>>>>> c0e2d0c0ec800f594e68b7e8bed81f40e5ed214c
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
@@ -8,7 +12,7 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.30.233:8001'; //máy thật
+  static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
@@ -359,5 +363,55 @@ class ApiService {
       print('Lỗi getFavoriteList: $e');
       return [];
     }
+  }
+
+  Future<List<CartItem>> getCartList() async {
+    final token = await StorageHelper.getToken();
+    final res = await http.get(
+      Uri.parse('$baseUrl/api/carts'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+    );
+    if (res.statusCode == 200) {
+      final jRes = jsonDecode(res.body);
+      if (jRes['success']) {
+        return (jRes['data'] as List)
+            .map((items) => CartItem.fromJson(items))
+            .toList();
+      }
+    }
+    return [];
+  }
+
+  Future<bool> addToCart(int productId, int quantity, String note) async {
+    final token = await StorageHelper.getToken();
+    final res = await http.post(
+      Uri.parse('$baseUrl/api/carts/add'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({
+        'product_id': productId,
+        'quantity': quantity,
+        'note': note,
+      }),
+    );
+    return res.statusCode == 200;
+  }
+
+  Future<bool> updateCart(int cartId, int quantity, String note) async {
+    final token = await StorageHelper.getToken();
+    final res = await http.put(
+      Uri.parse('$baseUrl/api/cart/update'),
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'cart_id': cartId, 'quantity': quantity, 'note': note}),
+    );
+    return res.statusCode == 200;
   }
 }

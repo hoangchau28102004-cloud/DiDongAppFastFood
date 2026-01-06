@@ -51,4 +51,9 @@ userRouter.post('/favorites/add',auth,userController.addFavorites);
 userRouter.get('/favorites/check',auth,userController.checkFavorites);
 userRouter.post('/favorites/remove',auth,userController.removeFavorite);
 userRouter.get('/favorites/list',auth,userController.getFavoriteList);
+
+// Cart
+userRouter.post('/carts/add',auth,userController.addToCart);
+userRouter.get('/carts',auth,userController.getCart);
+userRouter.put('/carts/update',auth,userController.updateCartItem);
 export default userRouter;

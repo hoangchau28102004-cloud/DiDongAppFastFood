@@ -14,10 +14,14 @@ class ProductDetailScreen extends StatefulWidget {
 
 class _ProductDetailScreenState extends State<ProductDetailScreen> {
   int _quantity = 1;
+
   bool _isLoggedIn = false;
   int? _userId;
+
   bool isLiking = false;
   bool isFav = false;
+
+  bool _isAddingToCart = false;
 
   Product? _fullProduct;
   bool isLoadingReview = true;
@@ -100,6 +104,42 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
         _isLoggedIn = (token != null && token.isNotEmpty);
         if (userId != null) _userId = userId;
       });
+    }
+  }
+
+  Future<void> _addtoCart() async {
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Bạn cần đăng nhập để thêm sản phẩm")),
+      );
+      return;
+    }
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    bool success = await ApiService().addToCart(
+      widget.product.id,
+      _quantity,
+      'Không ghi chú',
+    );
+    setState(() {
+      _isAddingToCart = false;
+    });
+    if (mounted) {
+      if (success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Đã thêm món vào giỏ hàng!"),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating, // Nổi lên cho đẹp
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Sản phẩm đã có trong giỏ hàng")),
+        );
+      }
     }
   }
 
@@ -472,12 +512,11 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 child: IconButton(onPressed: () {}, icon: Icon(Icons.chat)),
               ),
               SizedBox(
-                height: 45, // QUAN TRỌNG: Phải set chiều cao cho đường kẻ
+                height: 45,
                 child: VerticalDivider(
-                  color: primaryColor, // Màu xám
-                  thickness: 1, // Độ dày nét vẽ
-                  width:
-                      20, // Khoảng cách đệm (giống margin left/right gộp lại)
+                  color: primaryColor,
+                  thickness: 1,
+                  width: 20,
                 ),
               ),
               Container(
@@ -485,10 +524,18 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: IconButton(
-                  onPressed: () {},
-                  icon: Icon(Icons.shopping_cart_checkout_outlined),
-                ),
+                child: _isAddingToCart
+                    ? SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(),
+                      )
+                    : IconButton(
+                        onPressed: () {
+                          _addtoCart();
+                        },
+                        icon: Icon(Icons.shopping_cart_checkout_outlined),
+                      ),
               ),
               Expanded(
                 child: ElevatedButton(

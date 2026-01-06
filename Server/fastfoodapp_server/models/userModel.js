@@ -186,4 +186,38 @@ export default class userModel {
             throw new Error('Update password failed: ' + error.message);
         }
     }
+    // Hàm này nhiều quá lười try catch deadline dí (T_T)
+    static async checkItemInCart(user_id,product_id){
+        const sql = `SELECT * FROM carts WHERE user_id = ? AND product_id = ?`;
+        const [rows] = await execute(sql,[user_id,product_id]);
+        return rows[0];
+    }
+
+    static async addToCart(user_id,product_id,quantity,note){
+        const sql = `INSERT INTO carts(user_id,product_id,quantity,note)
+        VALUES (?,?,?,?)
+        `;
+        return await execute(sql,[user_id,product_id,quantity,note]);
+    }
+
+    static async updateCart(cartId,quantity,note){
+        const sql = `UPDATE carts SET quantity = ?, note = ? updated_at = NOW() WHERE cart_id = ?`;
+        return await execute(sql,[cartId,quantity,note]);
+    }
+
+    static async getCartByUserId(userId){
+        const sql = `
+        SELECT c.cart_id, c.product_id, c.quantity, c.note, p.name, p.price, p.image_url 
+        FROM Carts c
+        JOIN Products p ON c.product_id = p.product_id
+        WHERE c.user_id = ?
+        `;
+        const [rows] = await execute(sql,[userId]);
+        return rows;
+    }
+
+    static async removeCartItem(cartId){
+        const sql = `DELETE FROM carts WHERE cart_id = ?`;
+        return await execute(sql,[cartId]);
+    }
 }
