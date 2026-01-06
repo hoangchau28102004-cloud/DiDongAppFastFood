@@ -51,6 +51,7 @@ export default class userController {
         return jwt.sign(
             {
                 id: user.account_id,
+                userId: user.user_id,
                 username: user.Username,
                 role: user.role
             },

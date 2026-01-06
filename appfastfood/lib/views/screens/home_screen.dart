@@ -19,7 +19,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   final TextEditingController _search = TextEditingController();
 
   late Future<List<Product>> _productsFuture;
-  late Future<List<Product>> _favoriteFuture;
+  Future<List<Product>>? _favoriteFuture;
 
   List<Product> _homeDisplayProducts = [];
   List<Product> _homeAllProducts = [];
@@ -39,7 +39,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       }
     });
 
-    _favoriteFuture = _loadFavData();
+    _refreshFavData();
   }
 
   // Hàm load dữ liệu và cập nhật State cho Home
@@ -66,6 +66,15 @@ class _HomePageScreenState extends State<HomePageScreen> {
       _productsFuture = _loadHomeData();
     });
     return _productsFuture;
+  }
+
+  // Hàm refresh cho Favorite
+  Future<List<Product>> _refreshFavData() async {
+    final future = _apiService.getFavoriteList();
+    setState(() {
+      _favoriteFuture = future;
+    });
+    return future;
   }
 
   // Hàm lọc sản phẩm theo search text

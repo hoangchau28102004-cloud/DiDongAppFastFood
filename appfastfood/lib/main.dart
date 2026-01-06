@@ -1,4 +1,4 @@
-import 'package:appfastfood/views/screens/users/splash_screen.dart';
+import 'package:appfastfood/views/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
 
 void main() {

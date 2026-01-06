@@ -3,25 +3,30 @@ import 'package:appfastfood/views/widget/product_card.dart';
 import 'package:flutter/material.dart';
 import '../../../models/products.dart';
 
-class FavoriteContent extends StatelessWidget {
-  final List<Product> favoriteProducts;
-  final Future<List<Product>> productsFuture;
-  final Future<List<Product>> Function() onRefresh;
+class FavoriteContent extends StatefulWidget{
+  final List<Product>? favoriteProducts;
+  final Future<void> Function() onRefresh;
+  final Future<List<Product>>? productsFuture;
 
   const FavoriteContent({
     super.key,
     required this.favoriteProducts,
-    required this.productsFuture,
     required this.onRefresh,
+    required this.productsFuture
   });
 
+  @override
+  State<FavoriteContent> createState() => _FavoriteContentState();
+}
+
+class _FavoriteContentState extends State<FavoriteContent> {
   @override
   Widget build(BuildContext context) {
     return Expanded(
       child: RefreshIndicator(
-        onRefresh: onRefresh,
+        onRefresh: widget.onRefresh,
         child: FutureBuilder<List<Product>>(
-          future: productsFuture, 
+          future: widget.productsFuture, 
           builder: (context, snapshot) {
             if(snapshot.connectionState == ConnectionState.waiting){
               return const Center(child: CircularProgressIndicator());
@@ -50,14 +55,15 @@ class FavoriteContent extends StatelessWidget {
             final List<Product> realFavoriteList = snapshot.data!;
 
             return ListView.separated(
+              physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(10),
               separatorBuilder: (context, index) => const SizedBox(height: 20), 
               itemCount: realFavoriteList.length,
               itemBuilder:(context, index) {
                 final product = realFavoriteList[index];
                 return GestureDetector(
-                  onTap: () {
-                    Navigator.push(
+                  onTap: () async {
+                    await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (context) => ProductDetailScreen(product: product),
