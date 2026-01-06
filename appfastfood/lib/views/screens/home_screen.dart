@@ -31,7 +31,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
   void initState() {
     super.initState();
     _productsFuture = _loadHomeData();
-    
+
     // Lắng nghe ô tìm kiếm
     _search.addListener(() {
       if (_currentBottomIndex == 0) {
@@ -51,11 +51,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
       setState(() {
         _homeAllProducts = products;
         _homeDisplayProducts = products;
-        
-        final categories = products
-            .map((p) => p.categoryName)
-            .toSet()
-            .toList();
+
+        final categories = products.map((p) => p.categoryName).toSet().toList();
         _categories = ["All", ...categories];
         _selectedCategory = "All";
       });
@@ -78,7 +75,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
     } else {
       setState(() {
         _homeDisplayProducts = _homeAllProducts
-            .where((p) => p.name!.toLowerCase().contains(query.toLowerCase()))
+            .where((p) => p.name.toLowerCase().contains(query.toLowerCase()))
             .toList();
       });
     }
@@ -118,9 +115,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
         return const Center(child: Text("Màn hình Order (Đang phát triển)"));
       case 2:
         return FavoriteContent(
-          favoriteProducts: [], 
-          productsFuture: _favoriteFuture, 
-          onRefresh: _loadFavData
+          favoriteProducts: [],
+          productsFuture: _favoriteFuture,
+          onRefresh: _loadFavData,
         );
       case 3:
         return const Center(child: Text("Màn hình Lịch sử (Đang phát triển)"));
@@ -140,14 +137,14 @@ class _HomePageScreenState extends State<HomePageScreen> {
         children: [
           // TOP BAR
           CustomTopBar(
-            isHome: _currentBottomIndex == 0, // Chỉ hiện lời chào "Good Morning" ở trang Home
+            isHome:
+                _currentBottomIndex ==
+                0, // Chỉ hiện lời chào "Good Morning" ở trang Home
             searchController: _search,
           ),
 
           //NỘI DUNG THAY ĐỔI
-          Expanded(
-            child: _getBodyContent(),
-          ),
+          Expanded(child: _getBodyContent()),
         ],
       ),
 
@@ -158,7 +155,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           setState(() {
             _currentBottomIndex = index;
             if (index == 2) {
-               _loadFavData(); 
+              _loadFavData();
             }
           });
         },

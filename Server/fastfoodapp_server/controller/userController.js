@@ -376,4 +376,77 @@ export default class userController {
             res.status(500).json({ success: false, message: 'Lỗi server' });
         }
     }
+
+    static async addToCart(req,res){
+        try {
+            const user_id = req.userId;
+            const { product_id, quantity , note } = req.body;
+            
+            const checkItemInCart = await userModel.checkItemInCart(user_id,product_id);
+
+            if(checkItemInCart){
+                const addQuantity = checkItemInCart.quantity + quantity;
+                
+                const updateNote = note !== undefined ? note : checkItemInCart.note;
+
+                await userModel.updateCart(checkItemInCart.cart_id, addQuantity, updateNote);
+            }else{
+                await userModel.addToCart(user_id,product_id,quantity,note || "");
+                return res.status(200).json({
+                    success: true,
+                    message: 'Thêm Item vào thành công'
+                });
+            }
+        } catch (error) {
+            console.error('Add Cart Err', error);
+            res.status(500).json({
+                success: false,
+                message: 'Lỗi server'
+            });
+        }
+    }
+
+    static async getCart(req,res){
+        try {
+            const user_id = req.userId;
+            const cartItem = await userModel.getCartByUserId(user_id);
+
+            res.status(200).json({
+                success: true,
+                data: cartItem
+            });          
+        } catch (error) {
+            console.error("Get Cart Err",error);
+            res.status(500).json({
+                success: false,
+                message: "Lỗi server"
+            });
+        }
+    }
+
+    static async updateCartItem(req,res){
+        try {
+            const { cart_id, quantity, note } = req.body;
+
+            if(quantity <= 0){
+                await userModel.removeCartItem(cart_id);
+                return res.status(200).json({
+                    success: true,
+                    message: 'Xóa thành công'
+                });
+            }
+
+            await userModel.updateCart(cart_id,quantity,note || "");
+            res.status(200).json({
+                success: true,
+                message: 'Cập nhật thành công'
+            }); 
+        } catch (error) {
+            console.error("Get Cart Err",error);
+            res.status(500).json({
+                success: false,
+                message: "Lỗi server"
+            });
+        }
+    }
 }

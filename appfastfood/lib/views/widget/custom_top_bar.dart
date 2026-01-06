@@ -1,3 +1,4 @@
+import 'package:appfastfood/views/screens/users/cart_screen.dart';
 import 'package:flutter/material.dart';
 
 class CustomTopBar extends StatelessWidget {
@@ -65,7 +66,17 @@ class CustomTopBar extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _buildIcon(Icons.shopping_cart_outlined),
+                  GestureDetector(
+                    onTap: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => const CartScreen(),
+                        ),
+                      );
+                    },
+                    child: _buildIcon(Icons.shopping_cart_outlined),
+                  ),
+
                   const SizedBox(width: 8),
                   _buildIcon(Icons.notifications_outlined),
                   const SizedBox(width: 8),

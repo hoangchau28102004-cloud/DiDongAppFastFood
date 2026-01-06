@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:appfastfood/views/screens/home_screen.dart';
+import 'package:appfastfood/views/screens/users/cart_screen.dart';
 import 'package:appfastfood/views/screens/users/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,15 +35,14 @@ class _SideMenuState extends State<SideMenu> {
     setState(() {
       if (token != null && token.isNotEmpty && userJsonString != null) {
         _isLoggedIn = true;
-        
+
         Map<String, dynamic> userMap = jsonDecode(userJsonString);
         User currentUser = User.fromJson(userMap);
 
-        _userName = currentUser.username; 
+        _userName = currentUser.username;
         _userEmail = currentUser.email;
-        
-        // _avatarUrl = currentUser.image; 
-        
+
+        // _avatarUrl = currentUser.image;
       } else {
         _isLoggedIn = false;
         _userName = "Khách";
@@ -54,8 +54,8 @@ class _SideMenuState extends State<SideMenu> {
   // --- 2. HÀM XỬ LÝ ĐĂNG XUẤT ---
   Future<void> _logout() async {
     final prefs = await SharedPreferences.getInstance();
-    
-    await prefs.clear(); 
+
+    await prefs.clear();
 
     if (mounted) {
       setState(() {
@@ -67,7 +67,7 @@ class _SideMenuState extends State<SideMenu> {
       Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(builder: (context) => const HomePageScreen()),
-        (route) => false, 
+        (route) => false,
       );
     }
   }
@@ -79,7 +79,9 @@ class _SideMenuState extends State<SideMenu> {
       width: MediaQuery.of(context).size.width * 0.75,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.only(
-            topLeft: Radius.circular(30), bottomLeft: Radius.circular(30)),
+          topLeft: Radius.circular(30),
+          bottomLeft: Radius.circular(30),
+        ),
       ),
       backgroundColor: const Color(0xFFE95322),
       child: SafeArea(
@@ -94,10 +96,16 @@ class _SideMenuState extends State<SideMenu> {
                   CircleAvatar(
                     radius: 30,
                     backgroundColor: Colors.white,
-                    backgroundImage: hasImage 
-                        ? NetworkImage(_avatarUrl!) : null,
+                    backgroundImage: hasImage
+                        ? NetworkImage(_avatarUrl!)
+                        : null,
                     child: !hasImage
-                        ? const Icon(Icons.person, size: 35, color: Color(0xFFE95322)): null,
+                        ? const Icon(
+                            Icons.person,
+                            size: 35,
+                            color: Color(0xFFE95322),
+                          )
+                        : null,
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -118,34 +126,49 @@ class _SideMenuState extends State<SideMenu> {
                         const SizedBox(height: 4),
                         Text(
                           _userEmail,
-                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                          style: const TextStyle(
+                            color: Colors.white70,
+                            fontSize: 12,
+                          ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ],
                     ),
-                  )
+                  ),
                 ],
               ),
-              
+
               const SizedBox(height: 30),
               const Divider(color: Colors.white30, thickness: 1),
               const SizedBox(height: 10),
 
               // B. DANH SÁCH MENU
               if (_isLoggedIn) ...[
-                _buildMenuItem(Icons.shopping_bag_outlined, "Giỏ Hàng", () {
-                   // Navigator.push(context, MaterialPageRoute(builder: (context) => CartScreen()));
-                }),
+                // _buildMenuItem(Icons.shopping_bag_outlined, "Giỏ Hàng", () {
+                //   Navigator.push(
+                //     context,
+                //     MaterialPageRoute(builder: (context) => CartScreen()),
+                //   );
+                // }),
                 _buildMenuItem(Icons.person_outline, "Hồ sơ của tôi", () {
-                   // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
                 }),
-                _buildMenuItem(Icons.location_on_outlined, "Theo Dõi Đơn Hàng", () {}),
+                _buildMenuItem(
+                  Icons.location_on_outlined,
+                  "Theo Dõi Đơn Hàng",
+                  () {},
+                ),
                 _buildMenuItem(Icons.history, "Lịch Sử Mua Hàng", () {}),
               ] else ...[
                 _buildMenuItem(Icons.login, "Đăng Nhập / Đăng Ký", () {
                   Navigator.pop(context);
-                  Navigator.push(context, MaterialPageRoute(builder: (context) => const WelcomeScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WelcomeScreen(),
+                    ),
+                  );
                 }),
               ],
 
@@ -161,7 +184,9 @@ class _SideMenuState extends State<SideMenu> {
                     context: context,
                     builder: (context) => AlertDialog(
                       title: const Text("Đăng xuất"),
-                      content: const Text("Bạn có chắc chắn muốn đăng xuất không?"),
+                      content: const Text(
+                        "Bạn có chắc chắn muốn đăng xuất không?",
+                      ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(context),
@@ -172,7 +197,10 @@ class _SideMenuState extends State<SideMenu> {
                             Navigator.pop(context);
                             _logout();
                           },
-                          child: const Text("Đồng ý", style: TextStyle(color: Colors.red)),
+                          child: const Text(
+                            "Đồng ý",
+                            style: TextStyle(color: Colors.red),
+                          ),
                         ),
                       ],
                     ),
@@ -201,9 +229,16 @@ class _SideMenuState extends State<SideMenu> {
       title: Text(
         title,
         style: const TextStyle(
-            color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
       ),
-      trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white30, size: 12),
+      trailing: const Icon(
+        Icons.arrow_forward_ios,
+        color: Colors.white30,
+        size: 12,
+      ),
     );
   }
 }
