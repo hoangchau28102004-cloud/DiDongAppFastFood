@@ -19,13 +19,14 @@ class CartItem {
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
     return CartItem(
-      cartId: json['cart_id'],
-      productId: json['product_id'],
-      name: json['name'],
-      price: json['price'],
-      imageUrl: json['image_url'],
-      quantity: json['quantity'],
-      note: json['note'],
+      cartId: json['cart_id'] ?? 0,
+      productId: json['product_id'] ?? 0,
+      name: json['name'] ?? '',
+      // Xử lý giá tiền: JSON trả về String "55000.00" -> cần parse
+      price: double.tryParse(json['price'].toString()) ?? 0.0,
+      imageUrl: json['image_url'] ?? '',
+      quantity: json['quantity'] ?? 0,
+      note: json['note'] ?? '',
     );
   }
 }
