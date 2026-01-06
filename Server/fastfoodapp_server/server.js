@@ -17,6 +17,8 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', productRouter);
 app.use('/api', userRouter);
 
+app.use('/uploads', express.static('uploads'));
+
 // Default route
 app.get('/', (req, res) => {
     res.send('FastFood API is running on port ' + PORT);

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:appfastfood/views/screens/home_screen.dart';
+import 'package:appfastfood/views/screens/users/profile_screen.dart';
 import 'package:appfastfood/views/screens/welcome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/users.dart';
+import '../../models/account.dart';
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -36,12 +37,12 @@ class _SideMenuState extends State<SideMenu> {
         _isLoggedIn = true;
         
         Map<String, dynamic> userMap = jsonDecode(userJsonString);
-        User currentUser = User.fromJson(userMap);
+        Account currentUser = Account.fromJson(userMap);
 
         _userName = currentUser.username; 
         _userEmail = currentUser.email;
         
-        // _avatarUrl = currentUser.image; 
+        _avatarUrl = currentUser.image; 
         
       } else {
         _isLoggedIn = false;
@@ -138,7 +139,7 @@ class _SideMenuState extends State<SideMenu> {
                    // Navigator.push(context, MaterialPageRoute(builder: (context) => CartScreen()));
                 }),
                 _buildMenuItem(Icons.person_outline, "Hồ sơ của tôi", () {
-                   // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
+                   Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
                 }),
                 _buildMenuItem(Icons.location_on_outlined, "Theo Dõi Đơn Hàng", () {}),
                 _buildMenuItem(Icons.history, "Lịch Sử Mua Hàng", () {}),
