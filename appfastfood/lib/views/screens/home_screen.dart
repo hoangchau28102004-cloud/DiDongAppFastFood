@@ -127,9 +127,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
         return const Center(child: Text("Màn hình Order (Đang phát triển)"));
       case 2:
         return FavoriteContent(
-          favoriteProducts: [], 
+          favoriteProducts: [],
+          onRefresh: _refreshFavData,
           productsFuture: _favoriteFuture ?? _apiService.getFavoriteList(),
-          onRefresh: _refreshFavData
         );
       case 3:
         return const Center(child: Text("Màn hình Lịch sử (Đang phát triển)"));

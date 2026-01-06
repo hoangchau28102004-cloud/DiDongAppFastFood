@@ -1,5 +1,5 @@
 import 'package:appfastfood/service/api_service.dart';
-import 'package:appfastfood/views/screens/users/login_screen.dart';
+import 'package:appfastfood/views/screens/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import '../../../utils/app_colors.dart';
