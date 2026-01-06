@@ -69,6 +69,47 @@ export default class userModel {
         }
     }
 
+    // Cập nhật thông tin user
+    static async updateUser(userId, updateData) {
+        try {
+            const fields = [];
+            const values = [];
+
+            if (updateData.fullname) {
+                fields.push('fullname = ?');
+                values.push(updateData.fullname);
+            }
+            if (updateData.email) {
+                fields.push('email = ?');
+                values.push(updateData.email);
+            }
+            if (updateData.phone) {
+                fields.push('phone = ?');
+                values.push(updateData.phone);
+            }
+            if (updateData.birthday) {
+                fields.push('BirthDay = ?');
+                values.push(updateData.birthday);
+            }
+            if (updateData.image) {
+                fields.push('Image = ?');
+                values.push(updateData.image);
+            }
+
+            if (fields.length === 0) return { success: false, message: "Không có dữ liệu để cập nhật" };
+
+            values.push(userId);
+            const sql = `UPDATE Users SET ${fields.join(', ')} WHERE user_id = ?`;
+            
+            const [result] = await execute(sql, values);
+            return { success: true, affectedRows: result.affectedRows };
+
+        } catch (error) {
+            throw new Error('Update user failed: ' + error.message);
+        }
+    }
+
+    // Thêm sản phẩm yêu thích
     static async addFavorites(userId,productId){
         try{
             const [check] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?', [userId,productId]);
@@ -85,11 +126,13 @@ export default class userModel {
         }
     }
 
+    // Kiểm tra sản phẩm đã được yêu thích chưa
     static async checkFavorites(userId,productId){
         const [rows] = await execute('SELECT * FROM favorites WHERE user_id = ? AND product_id = ?',[userId,productId]);
         return rows.length > 0;
     }
 
+    // Xóa sản phẩm yêu thích
     static async removeFavorites(userId,product_id){
         try {
             const [result] = await execute('DELETE FROM favorites WHERE user_id = ? AND product_id = ?',[userId,product_id]);

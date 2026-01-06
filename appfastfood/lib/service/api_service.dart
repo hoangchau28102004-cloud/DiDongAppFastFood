@@ -1,5 +1,10 @@
+import 'dart:io';
+
+import 'package:appfastfood/models/user.dart';
+
 import 'package:appfastfood/models/cartItem.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
+import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import '../models/products.dart';
 import 'dart:convert';
@@ -8,7 +13,7 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -71,6 +76,94 @@ class ApiService {
       }
     } catch (e) {
       throw Exception('Lỗi đăng ký: $e');
+    }
+  }
+
+  // Lấy thông tin profile
+  Future<User?> getProfile() async {
+    try {
+      final token = await StorageHelper.getToken();
+
+      final url = Uri.parse('$urlEdit/users/profile');
+      final response = await http.get(
+        url,
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer $token",
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = jsonDecode(response.body);
+        if (data['success'] == true && data['user'] != null) {
+          return User.fromJson(data['user']);
+        }
+      }
+    } catch (e) {
+      print("Error fetching profile: $e");
+    }
+    return null;
+  }
+
+  // Cập nhật thông tin profile
+  Future<bool> updateProfile(
+    String fullname,
+    String email,
+    String phone,
+    String birthday,
+    File? imageFile,
+  ) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      var uri = Uri.parse('$urlEdit/api/users/profile/update');
+      var request = http.MultipartRequest('POST', uri);
+
+      request.headers.addAll({'Authorization': 'Bearer $token'});
+
+      // Thêm các fields text
+      request.fields['fullname'] = fullname;
+      request.fields['email'] = email;
+      request.fields['phone'] = phone;
+      request.fields['birthday'] = birthday;
+
+      // Thêm file ảnh
+      if (imageFile != null) {
+        var stream = http.ByteStream(imageFile.openRead());
+        var length = await imageFile.length();
+
+        var multipartFile = http.MultipartFile(
+          'image',
+          stream,
+          length,
+          filename: imageFile.path.split('/').last,
+          contentType: MediaType('image', 'jpeg'),
+        );
+        request.files.add(multipartFile);
+      }
+
+      // Gửi request
+      var response = await request.send();
+
+      if (response.statusCode == 200) {
+        final respStr = await response.stream.bytesToString();
+        final jsonResponse = jsonDecode(respStr);
+
+        if (jsonResponse['success'] == true) {
+          var updatedUser = User.fromJson(jsonResponse['user']);
+          await StorageHelper.saveFullname(updatedUser.fullname);
+          await StorageHelper.saveImage(updatedUser.image);
+          return true;
+        }
+      } else {
+        final respStr = await response.stream.bytesToString();
+        print("Lỗi update: $respStr");
+      }
+      return false;
+    } catch (e) {
+      print("Lỗi Exception Update: $e");
+      return false;
     }
   }
 

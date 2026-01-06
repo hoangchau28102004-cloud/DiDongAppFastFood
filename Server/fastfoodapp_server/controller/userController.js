@@ -171,6 +171,45 @@ export default class userController {
             res.status(500).json({ success: false, message: error.message });
         }
     }
+
+    // Cập nhật Profile
+    static async updateUserInfo(req, res) {
+        try {
+            const userId = req.userId;
+            const { fullname, email, phone, birthday, image } = req.body;
+
+            let imagePath = null;
+            if (req.file) {
+                imagePath = 'uploads/' + req.file.filename; 
+            }
+
+            if (phone && !/^[0-9]{10}$/.test(phone)) {
+                return res.status(400).json({ success: false, message: 'Số điện thoại không hợp lệ (phải là 10 số)' });
+            }
+
+            if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                return res.status(400).json({ success: false, message: 'Email không hợp lệ' });
+            }
+
+            const result = await userModel.updateUser(userId, { fullname, email, phone, birthday, image: imagePath });
+
+            if (!result.success && result.message) {
+                 return res.status(400).json(result);
+            }
+
+            const updatedUser = await userModel.findById(userId);
+
+            res.status(200).json({
+                success: true,
+                message: 'Cập nhật thông tin thành công',
+                user: updatedUser
+            });
+
+        } catch (error) {
+            console.error(error);
+            res.status(500).json({ success: false, message: 'Lỗi server: ' + error.message });
+        }
+    }
     
     // Forget password
     static async forgetPassword(req, res) {

@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/views/screens/users/forgot_pass_screen.dart';
+import 'package:appfastfood/views/screens/users/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/users.dart';
+import '../../models/account.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -39,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (result['success'] == true) {
-        User user = User.fromJson(result['user']);
+        Account user = Account.fromJson(result['user']);
         String token = result['token'];
 
         // Lưu vào SharedPreferences
@@ -246,7 +247,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       GestureDetector(
                         onTap: () {
                           // Điều hướng sang màn hình Đăng ký
-                          // Navigator.push(context, MaterialPageRoute(builder: (context) => SignUpScreen()));
+                          Navigator.push(context, MaterialPageRoute(builder: (context) => RegisterScreen()));
                         },
                         child: const Text(
                           "Sign Up",
