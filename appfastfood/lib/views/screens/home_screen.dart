@@ -1,6 +1,7 @@
 import 'package:appfastfood/views/screens/home_interface/favorite_content.dart';
 import 'package:appfastfood/views/screens/home_interface/home_content.dart';
 import 'package:appfastfood/views/screens/users/faq_screen.dart';
+import 'package:appfastfood/views/screens/users/promotion_screen.dart'; 
 import 'package:flutter/material.dart';
 import '../../models/products.dart';
 import '../../service/api_service.dart';
@@ -122,7 +123,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
           onRefresh: _refreshHome,
         );
       case 1:
-        return const Center(child: Text("Màn hình Order (Đang phát triển)"));
+        return const PromotionScreen();
       case 2:
         return FavoriteContent(
           favoriteProducts: [],

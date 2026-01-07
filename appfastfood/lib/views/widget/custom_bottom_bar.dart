@@ -23,7 +23,7 @@ class CustomBottomBar extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(Icons.home_outlined, 0),
-              _buildNavItem(Icons.room_service_outlined, 1),
+              _buildNavItem(Icons.local_offer, 1),
               _buildNavItem(Icons.favorite_border, 2),
               _buildNavItem(Icons.assignment_outlined, 3),
               _buildNavItem(Icons.headset_mic_outlined, 4),

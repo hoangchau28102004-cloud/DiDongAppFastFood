@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:appfastfood/models/cartItem.dart';
 import 'package:appfastfood/models/user.dart';
+import 'package:appfastfood/models/promotion.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
@@ -437,6 +438,24 @@ class ApiService {
     } catch (e) {
       print('Lỗi removeCart $e');
       return false;
+    }
+  }
+  //Lấy mã Khuyến Mãi 
+  Future<List<Promotion>> getPromotions() async {
+    final url = Uri.parse('$urlEdit/promotions'); 
+    
+    try {
+      final response = await http.get(url);
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Promotion.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load promotions');
+      }
+    } catch (e) {
+      print("Lỗi lấy khuyến mãi: $e");
+      return []; 
     }
   }
 }

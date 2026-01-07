@@ -1,174 +1,125 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; 
+import '../../../models/promotion.dart';
+import '../../../service/api_service.dart';
 
-class PromotionScreen extends StatelessWidget {
+class PromotionScreen extends StatefulWidget {
   const PromotionScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    // Dữ liệu giả lập
-    final List<Map<String, dynamic>> promoProducts = [
-      {
-        "name": "Mì Ý Bò Bằm",
-        "desc": "Món mì kinh điển làm say lòng thực khách...",
-        "price": 16.09,
-        "oldPrice": 22.99,
-        "image":
-            "https://images.unsplash.com/photo-1626844131082-256783844137?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-        "discount": "-30%",
-      },
-      {
-        "name": "Broccoli Lasagna",
-        "desc": "Lorem ipsum dolor sit amet...",
-        "price": 12.50,
-        "oldPrice": 18.00,
-        "image":
-            "https://images.unsplash.com/photo-1574837696921-37503dc4581a?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-        "discount": "-30%",
-      },
-      {
-        "name": "Gà Rán Mật Ong",
-        "desc": "Gà rán giòn tan sốt mật ong...",
-        "price": 10.99,
-        "oldPrice": 15.99,
-        "image":
-            "https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80",
-        "discount": "-30%",
-      },
-    ];
+  State<PromotionScreen> createState() => _PromotionScreenState();
+}
 
-    return Scaffold(
-      backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFFFCD057), // Màu vàng header
-        elevation: 0,
-        centerTitle: true,
-        automaticallyImplyLeading: false, // Ẩn nút back
-        title: const Text(
-          "Khuyến Mãi",
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-            fontSize: 22,
-          ),
-        ),
-      ),
-      body: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: promoProducts.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 16),
-        itemBuilder: (context, index) {
-          final item = promoProducts[index];
-          return Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(15),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.grey.withOpacity(0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, 5),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Ảnh + Tem giảm giá
-                Stack(
-                  children: [
-                    ClipRRect(
-                      borderRadius: const BorderRadius.vertical(
-                        top: Radius.circular(15),
-                      ),
-                      child: Image.network(
-                        item['image'],
-                        height: 180,
-                        width: double.infinity,
-                        fit: BoxFit.cover,
-                      ),
-                    ),
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 8,
-                        ),
-                        decoration: const BoxDecoration(
-                          color: Colors.red, // Tem màu đỏ
-                          shape:
-                              BoxShape.circle, // Hình tròn hoặc hình răng cưa
-                        ),
-                        child: Text(
-                          item['discount'],
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            item['name'],
-                            style: const TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color(0xFFE95322),
-                            ),
-                          ),
-                          Row(
-                            children: [
-                              Text(
-                                "${item['price']}đ",
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFFE95322),
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              Text(
-                                "${item['oldPrice']}đ",
-                                style: const TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey,
-                                  decoration: TextDecoration
-                                      .lineThrough, // Gạch ngang giá cũ
-                                ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 5),
-                      Text(
-                        item['desc'],
-                        style: const TextStyle(
-                          color: Colors.grey,
-                          fontSize: 12,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+class _PromotionScreenState extends State<PromotionScreen> {
+  final ApiService _apiService = ApiService();
+  late Future<List<Promotion>> _promotionFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _promotionFuture = _apiService.getPromotions(); 
+  }
+
+  // Hàm format ngày cho đẹp (VD: 02/02)
+  String _formatDate(DateTime? date) {
+    if (date == null) return "...";
+    return "${date.day}/${date.month}";
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: Colors.white,
+      child: FutureBuilder<List<Promotion>>(
+        future: _promotionFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return const Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            return Center(child: Text("Lỗi kết nối: ${snapshot.error}"));
+          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return const Center(child: Text("Chưa có chương trình khuyến mãi nào!"));
+          }
+
+          final promotions = snapshot.data!;
+
+          return ListView.separated(
+            padding: const EdgeInsets.all(16),
+            itemCount: promotions.length,
+            separatorBuilder: (context, index) => const SizedBox(height: 16),
+            itemBuilder: (context, index) {
+              final item = promotions[index];
+              
+              // Tạo chuỗi hiển thị hạn sử dụng
+              String timeDesc = "Hạn dùng: ${_formatDate(item.startDate)} - ${_formatDate(item.endDate)}";
+              
+              String discountDisplay = item.discountPercent.toStringAsFixed(0);
+
+              return _buildCouponCard(item.name, timeDesc, discountDisplay);
+            },
           );
         },
+      ),
+    );
+  }
+  Widget _buildCouponCard(String title, String subtitle, String discount) {
+    return Container(
+      height: 100,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFFF9C4), 
+        borderRadius: BorderRadius.circular(15),
+        border: Border.all(color: Colors.orange.shade100),
+        boxShadow: [
+          BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 5, offset: const Offset(0, 3)),
+        ],
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(left: 16, top: 12, bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    title, // Tên chương trình KM từ DB
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
+                    maxLines: 1, overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    subtitle, // Ngày tháng từ DB
+                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          Container(width: 1, height: 70, color: Colors.orange.shade200, margin: const EdgeInsets.symmetric(horizontal: 10)),
+          
+          // Phần Tem đỏ
+          SizedBox(
+            width: 90,
+            child: Center(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Transform.rotate(
+                    angle: 0.785, 
+                    child: Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(4))),
+                  ),
+                  Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(4))),
+                  Text(
+                    "-$discount%", // Số % từ DB
+                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
