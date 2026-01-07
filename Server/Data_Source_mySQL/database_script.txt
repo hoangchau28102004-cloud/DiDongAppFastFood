@@ -274,3 +274,17 @@ VALUES (6, 15, NULL, 1);
 -- Áp dụng cho Burger Tôm (Product ID: 3)
 INSERT INTO Promotion_Details (promotion_id, product_id, category_id, status) 
 VALUES (6, 3, NULL, 1);
+
+//Scipt thêm promotion_id vào order
+-- Thêm cột promotion_id vào bảng Orders (cho phép NULL nếu không dùng voucher)
+ALTER TABLE Orders
+ADD COLUMN promotion_id INT NULL AFTER user_id,
+ADD CONSTRAINT fk_order_promotion
+FOREIGN KEY (promotion_id) REFERENCES Promotions(promotion_id);
+-- Nếu cột đã tồn tại
+ALTER TABLE Orders
+ADD CONSTRAINT fk_order_promotion
+FOREIGN KEY (promotion_id) REFERENCES Promotions(promotion_id);
+--Thêm cột amount discount cho order
+ALTER TABLE orders 
+ADD COLUMN discount_amount DECIMAL(15, 2) DEFAULT 0 AFTER subtotal;

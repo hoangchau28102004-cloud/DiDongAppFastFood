@@ -221,4 +221,153 @@ export default class userModel {
         const sql = `DELETE FROM carts WHERE cart_id = ?`;
         return await execute(sql,[cartId]);
     }
+
+    static async startTransaction({ userId, shippingAddressId, note, items, isBuyFromCart = false, promotionId = null}){
+        let connection;
+        try {
+            connection = await beginTransaction();
+
+            let promotion = null;
+            let promotionDetails = [];
+
+            if(promotionId){
+                const [promos] = await connection.execute(
+                    `SELECT * FROM promotions
+                    WHERE promotion_id = ? AND status = 1
+                    AND start_date <= NOW() AND end_date >= NOW`,[promotionId]
+                );
+                if(promos.length > 0){
+                    promotion = promos[0];
+
+                    const [details] = await connection.execute(
+                        `SELECT promotion_id, product_id, category_id
+                        FROM promotion_details WHERE promotion_id = ? AND status = 1`,[promotionId]
+                    );
+                    promotionDetails = details;
+                }
+            }
+
+            let subtotal = 0;
+            let totalDiscountAmount = 0;
+            const orderDetalBatch = [];
+
+            for(item of items){
+                const [products] = await connection.execute(
+                  `SELECT price, category_id FROM Products WHERE product_id = ?`,
+                  [items.productId]
+                );
+
+                if(products.length === 0){
+                    throw new Error(`Sản phẩm ID ${item.productId} không tồn tại`);
+                }
+
+                const product = products[0];
+                const unitPrice = parseFloat(product.price);
+                const categoryId = product.category_id;
+
+                const lineTotalOrigin = unitPrice * item.quantity;
+                subtotal += lineTotalOrigin;
+
+                let discountForThisItem = 0;
+                let aplliedDetailId = null; // id của khuyến mãi
+
+                if(promotion){
+                    let matchedDetail = null;
+
+                    if(promotionDetails.length > 0){
+                        // tìm khuyến mãi theo id sản phẩm
+                        matchedDetail = promotionDetails.find(d => d.product_id === item.product_id);
+                        //dòng ở trên tìm ko có nữa thì tìm ở dưới này hihi
+                        if(!matchedDetail){
+                            matchedDetail = promotionDetails.find(d => d.category_id === item.category_id);
+                        }
+                    }
+                    // để đc giảm giá thì phải có 1 cái này hoặc 1 cái kia nếu áp dụng theo sản phẩm hoặc áp dụng theo tất cả
+                    if(matchedDetail || promotionDetails.length === 0){
+                        const percent = parseFloat(promotion.discount_percent);
+                        discountForThisItem = (lineTotalOrigin * percent) / 100;
+                        if(matchedDetail){
+                            aplliedDetailId = matchedDetail.promotion_detail_id;
+                        }
+                    }
+                }
+                totalDiscountAmount += discountForThisItem;
+                const finalLinePrice = lineTotalOrigin - discountForThisItem;
+
+                orderDetalBatch.push({
+                    product_id: item.product_id,
+                    quantity: item.quantity,
+                    unit_price: item.unitPrice,
+                    final_line_price: finalLinePrice,
+                    promotion_detail_id: aplliedDetailId
+                });
+
+                
+            }
+            const taxFee = 1.8;
+            let totalAmount = (subtotal - totalDiscountAmount) * taxFee;
+            if(totalAmount < 0) totalAmount = 0;
+
+            const [orderResult] = await connection.execute(
+                `INSERT INTO Orders (
+                user_id, promotion_id, shipping_address_id, 
+                subtotal, discount_amount, tax_fee, total_amount, 
+                order_status, payment_status, note, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?, NOW())`,
+                [
+                    userId,
+                    promotion ? promotion.promotion_id : null,
+                    shippingAddressId,
+                    subtotal,
+                    totalDiscountAmount,
+                    taxFee,
+                    totalAmount,
+                    note
+                ]
+            );
+
+            const newOrderId = orderResult.insertId; // lấy id vừa insert vào
+
+            for(const detail of orderDetalBatch){
+                await connection.execute(
+                    `INSERT INTO Order_Details(order_id, product_id, quantity, unit_price,promotion_detail_id, final_line_price)
+                    VALUES (?,?,?,?,?,?)
+                    `,
+                    [
+                        newOrderId,
+                        detail.product_id,
+                        detail.quantity,
+                        detail.unit_price,
+                        detail.promotion_detail_id,
+                        detail.final_line_price
+                    ]
+                );
+            }
+
+            if(isBuyFromCart && items.length > 0){
+                const productIds = items.map(i => i.product_id);
+
+                const placholder = productIds.map(()=> '?').join(',');
+                const deleteParams = [userId, ...productIds];
+
+                await connection.execute(
+                    `DELETE FROM Carts WHERE user_id = ? AND product_id IN (${placholder})`,
+                    [deleteParams]
+                );
+            }
+            await commitTransaction(connection);
+
+            return {
+                success: true,
+                order_id: newOrderId,
+                subtotal: subtotal,
+                discount_amount: totalDiscountAmount,
+                total_amout: totalAmount
+            };
+        } catch (e) {
+            if(connection) await rollbackTransaction(connection);
+            console.error("Lỗi create Order: ",e);
+            throw new Error(e.message);
+        }
+    }
 }

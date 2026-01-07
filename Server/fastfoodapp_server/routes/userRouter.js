@@ -43,4 +43,7 @@ userRouter.post('/carts/add',auth,userController.addToCart);
 userRouter.get('/carts',auth,userController.getCart);
 userRouter.put('/carts/update',auth,userController.updateCartItem);
 userRouter.delete('/carts/delete',auth,userController.removeCartItem);
+
+//Order
+userRouter.post('/orders/checkout',auth,userController.checkout);
 export default userRouter;

@@ -504,4 +504,37 @@ export default class userController {
             });
         }
     }
+
+    static async checkout(req,res){
+        try {
+            const userId = req.userId;
+            const { shipping_address_id, note, items, isBuyFromCart, promotion_id } = req.body;
+
+            if(!shipping_address_id || items || items.length === 0){
+                return res.status(400).json({
+                    success: false,
+                    message: 'THiếu thông tin địa chỉ giao hàng hoặc sản phẩm'
+                });
+            }
+
+            const result = await userModel.createTransport({
+                userId: userId,
+                shippingAddressId: shipping_address_id,
+                note: note,
+                items: items,
+                isBuyFromCart: isBuyFromCart,
+                promotionId: promotion_id
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Tạo đơn thành công'
+            })
+        } catch (error) {
+             return res.status(500).json({
+                    success: false,
+                    message: error.message
+                });
+        }
+    }
 }
