@@ -1,8 +1,7 @@
 import 'dart:io';
 
-import 'package:appfastfood/models/user.dart';
-
 import 'package:appfastfood/models/cartItem.dart';
+import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
