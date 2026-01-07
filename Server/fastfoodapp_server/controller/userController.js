@@ -176,11 +176,18 @@ export default class userController {
     static async updateUserInfo(req, res) {
         try {
             const userId = req.userId;
-            const { fullname, email, phone, birthday, image } = req.body;
+            const { fullname, email, phone, birthday } = req.body;
 
-            let imagePath = null;
+            let imageBase64 = null;
+
+            // Xử lý ảnh: Chuyển Buffer sang Base64 string
             if (req.file) {
-                imagePath = 'uploads/' + req.file.filename; 
+                if (!req.file.buffer) {
+                     throw new Error("Lỗi Server: Không tìm thấy dữ liệu ảnh trong RAM (Kiểm tra lại userRouter)");
+                }
+                // Tạo chuỗi base64 đầy đủ (vd: data:image/png;base64,RxR...)
+                const b64 = Buffer.from(req.file.buffer).toString('base64');
+                imageBase64 = `data:${req.file.mimetype};base64,${b64}`;
             }
 
             if (phone && !/^[0-9]{10}$/.test(phone)) {
@@ -191,7 +198,13 @@ export default class userController {
                 return res.status(400).json({ success: false, message: 'Email không hợp lệ' });
             }
 
-            const result = await userModel.updateUser(userId, { fullname, email, phone, birthday, image: imagePath });
+            const result = await userModel.updateUser(userId, { 
+                fullname, 
+                email, 
+                phone, 
+                birthday, 
+                image: imageBase64 
+            });
 
             if (!result.success && result.message) {
                  return res.status(400).json(result);

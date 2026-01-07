@@ -4,7 +4,7 @@ import 'package:appfastfood/views/screens/users/forgot_pass_screen.dart';
 import 'package:appfastfood/views/screens/users/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/account.dart';
+import '../../models/user.dart';
 import 'home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,7 +40,7 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (result['success'] == true) {
-        Account user = Account.fromJson(result['user']);
+        User user = User.fromJson(result['user']);
         String token = result['token'];
 
         // Lưu vào SharedPreferences

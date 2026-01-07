@@ -1,6 +1,5 @@
 import 'package:appfastfood/models/cartItem.dart';
 import 'package:appfastfood/service/api_service.dart';
-// Đổi đường dẫn import này cho đúng với project của bạn
 import 'package:appfastfood/views/widget/product_card_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';

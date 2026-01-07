@@ -5,7 +5,7 @@ import 'package:appfastfood/views/screens/welcome_screen.dart';
 import 'package:appfastfood/views/screens/users/support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../models/account.dart';
+import '../../models/user.dart';
 
 class SideMenu extends StatefulWidget {
   const SideMenu({super.key});
@@ -38,7 +38,7 @@ class _SideMenuState extends State<SideMenu> {
         _isLoggedIn = true;
 
         Map<String, dynamic> userMap = jsonDecode(userJsonString);
-        Account currentUser = Account.fromJson(userMap);
+        User currentUser = User.fromJson(userMap);
 
         _userName = currentUser.username;
         _userEmail = currentUser.email;

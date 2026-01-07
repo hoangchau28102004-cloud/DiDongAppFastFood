@@ -60,6 +60,7 @@ class CustomTextField extends StatelessWidget {
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
   final List<TextInputFormatter> inputFormatters;
+  final VoidCallback? onTap;
 
   const CustomTextField({
     super.key,
@@ -70,6 +71,7 @@ class CustomTextField extends StatelessWidget {
     this.suffixIcon,
     this.keyboardType,
     this.inputFormatters = const [],
+    this.onTap,
   });
 
   @override
@@ -92,6 +94,7 @@ class CustomTextField extends StatelessWidget {
           controller: controller,
           obscureText: obscureText,
           keyboardType: keyboardType,
+          onTap: onTap,
           inputFormatters: inputFormatters,
           decoration: InputDecoration(
             filled: true,

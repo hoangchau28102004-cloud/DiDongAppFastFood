@@ -13,7 +13,7 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -84,7 +84,7 @@ class ApiService {
     try {
       final token = await StorageHelper.getToken();
 
-      final url = Uri.parse('$urlEdit/users/profile');
+      final url = Uri.parse('$urlEdit/api/profile');
       final response = await http.get(
         url,
         headers: {
@@ -96,7 +96,10 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['user'] != null) {
-          return User.fromJson(data['user']);
+          User user = User.fromJson(data['user']);
+          await StorageHelper.saveImage(user.image); 
+          await StorageHelper.saveFullname(user.fullname);
+          return user;
         }
       }
     } catch (e) {
@@ -106,63 +109,55 @@ class ApiService {
   }
 
   // Cập nhật thông tin profile
-  Future<bool> updateProfile(
-    String fullname,
-    String email,
-    String phone,
-    String birthday,
+  Future<bool> updateProfile({
+    required String fullname,
+    required String email,
+    required String phone,
+    required String birthday,
     File? imageFile,
-  ) async {
+  }) async {
     try {
       final token = await StorageHelper.getToken();
-      if (token == null) return false;
+      final url = Uri.parse('$urlEdit/api/profile/update');
+      var request = http.MultipartRequest('POST', url);
 
-      var uri = Uri.parse('$urlEdit/api/users/profile/update');
-      var request = http.MultipartRequest('POST', uri);
-
-      request.headers.addAll({'Authorization': 'Bearer $token'});
-
-      // Thêm các fields text
+      // Header Authorization
+      request.headers['Authorization'] = 'Bearer $token';
+      // Gửi các trường text (Text Fields)
       request.fields['fullname'] = fullname;
       request.fields['email'] = email;
       request.fields['phone'] = phone;
       request.fields['birthday'] = birthday;
 
-      // Thêm file ảnh
       if (imageFile != null) {
-        var stream = http.ByteStream(imageFile.openRead());
-        var length = await imageFile.length();
-
-        var multipartFile = http.MultipartFile(
-          'image',
-          stream,
-          length,
-          filename: imageFile.path.split('/').last,
+        var pic = await http.MultipartFile.fromPath(
+          'image', 
+          imageFile.path,
           contentType: MediaType('image', 'jpeg'),
         );
-        request.files.add(multipartFile);
+        request.files.add(pic);
       }
 
-      // Gửi request
-      var response = await request.send();
+      var streamedResponse = await request.send();
+      var response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200) {
-        final respStr = await response.stream.bytesToString();
-        final jsonResponse = jsonDecode(respStr);
-
-        if (jsonResponse['success'] == true) {
-          var updatedUser = User.fromJson(jsonResponse['user']);
-          await StorageHelper.saveFullname(updatedUser.fullname);
-          await StorageHelper.saveImage(updatedUser.image);
-          return true;
+        final data = jsonDecode(response.body);
+        if (data['success'] == true) {
+            // Cập nhật lại StorageHelper nếu server trả về user mới
+            if (data['user'] != null) {
+              User updatedUser = User.fromJson(data['user']);
+              await StorageHelper.saveImage(updatedUser.image);
+              await StorageHelper.saveFullname(updatedUser.fullname);
+            }
+            return true;
         }
       } else {
-        final respStr = await response.stream.bytesToString();
-        print("Lỗi update: $respStr");
+        print("Update Failed: ${response.body}");
       }
       return false;
     } catch (e) {
-      print("Lỗi Exception Update: $e");
+      print('Lỗi updateProfile: $e');
       return false;
     }
   }
@@ -369,7 +364,7 @@ class ApiService {
   Future<List<CartItem>> getCartList() async {
     final token = await StorageHelper.getToken();
     final res = await http.get(
-      Uri.parse('$baseUrl/api/carts'),
+      Uri.parse('$urlEdit/api/carts'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -389,7 +384,7 @@ class ApiService {
   Future<bool> addToCart(int productId, int quantity, String note) async {
     final token = await StorageHelper.getToken();
     final res = await http.post(
-      Uri.parse('$baseUrl/api/carts/add'),
+      Uri.parse('$urlEdit/api/carts/add'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -406,7 +401,7 @@ class ApiService {
   Future<bool> updateCart(int cartId, int quantity, String note) async {
     final token = await StorageHelper.getToken();
     final res = await http.put(
-      Uri.parse('$baseUrl/api/carts/update'),
+      Uri.parse('$urlEdit/api/carts/update'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',

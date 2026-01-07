@@ -20,7 +20,7 @@ CREATE TABLE Users (
     email VARCHAR(100) UNIQUE,
     phone VARCHAR(10) UNIQUE,
     BirthDay DATE,
-    Image TEXT,
+    Image LONGTEXT,
     status TINYINT DEFAULT 1,
     FOREIGN KEY (account_id) REFERENCES Account(account_id) ON DELETE CASCADE
 );

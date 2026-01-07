@@ -27,7 +27,7 @@ class StorageHelper {
 
   static Future<void> saveImage(String? image) async {
     final prefs = await SharedPreferences.getInstance();
-    if (image != null && image != "null") {
+    if (image != null && image != "null" && image.isNotEmpty) {
       await prefs.setString(_avatar, image);
     } else {
       await prefs.remove(_avatar);
