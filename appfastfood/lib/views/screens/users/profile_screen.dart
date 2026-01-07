@@ -36,33 +36,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   // Lấy thông tin user từ API
   Future<void> _loadUserProfile() async {
-    String? token = await StorageHelper.getToken();
+    setState(() => _isLoading = true); 
 
-    if (token != null) {
-      // Gọi API lấy thông tin mới nhất
-      User? userFetchedFromApi = await ApiService().getProfile();
+    try {
+      String? token = await StorageHelper.getToken();
       
-      if (mounted) {
-          setState(() {
+      if (token != null) {
+        User? userFetchedFromApi = await ApiService().getProfile();
+        
+        if (mounted && userFetchedFromApi != null) {
+           setState(() {
             _currentUser = userFetchedFromApi;
 
             _nameController.text = _currentUser?.fullname ?? "";
             _emailController.text = _currentUser?.email ?? "";
             _phoneController.text = _currentUser?.phone ?? "";
-            _dobController.text = _currentUser!.birthday!;
-
-            if (_currentUser?.birthday != null &&  _currentUser!.birthday != "null") {
-               try {
-                 DateTime date = DateTime.parse(_currentUser!.birthday!);
-                 _dobController.text = DateFormat('yyyy-MM-dd').format(date);
-               } catch (e) {
-                 _dobController.text = _currentUser!.birthday!; // Nếu lỗi format thì hiện nguyên gốc
-               }
-            } else {
-               _dobController.text = "";
-            }
+            
+            _dobController.text = _formatDateForDisplay(_currentUser?.birthday);
           });
         }
+      }
+    } catch (e) {
+      print("Lỗi load profile: $e");
+      // Có thể hiện thông báo lỗi nhẹ ở đây nếu muốn
+    } finally {
+      // 2. Tắt loading dù thành công hay thất bại
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -83,25 +84,58 @@ class _ProfileScreenState extends State<ProfileScreen> {
       initialDate: DateTime.now(),
       firstDate: DateTime(1900),
       lastDate: DateTime.now(),
+      // locale: const Locale("vi","VN")
     );
     if (picked != null) {
       setState(() {
-        _dobController.text = DateFormat('yyyy-MM-dd').format(picked);
+        _dobController.text = DateFormat('dd-MM-yyyy').format(picked);
       });
+    }
+  }
+
+  // Chuyển từ yyyy-MM-dd (API) sang dd-MM-yyyy (Hiển thị)
+  String _formatDateForDisplay(String? dateString) {
+    if (dateString == null || dateString == "null" || dateString.isEmpty) {
+      return "";
+    }
+
+    try {
+      DateTime date = DateTime.parse(dateString);
+      return DateFormat('dd-MM-yyyy').format(date);
+    } catch (e) {
+      try {
+        DateTime date = DateFormat('dd/MM/yyyy').parse(dateString.replaceAll('-', '/'));
+        return DateFormat('dd-MM-yyyy').format(date);
+      } catch (e2) {
+        return dateString; 
+      }
+    }
+  }
+
+  // Chuyển từ dd-MM-yyyy (Hiển thị) sang yyyy-MM-dd (Gửi API)
+  String _formatDateForApi(String uiDate) {
+    if (uiDate.isEmpty) return "";
+    try {
+      DateTime date = DateFormat('dd-MM-yyyy').parse(uiDate);
+      return DateFormat('yyyy-MM-dd').format(date);
+    } catch (e) {
+      return uiDate; // Trả về nguyên gốc nếu lỗi
     }
   }
 
   // Hàm lưu thông tin
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
+
+    String apiBirthday = _formatDateForApi(_dobController.text);
     
     // Gọi API update
     bool success = await ApiService().updateProfile(
       fullname: _nameController.text,
       email: _emailController.text,
       phone: _phoneController.text,
-      birthday: _dobController.text,
-      imageFile: _selectedImage, // Truyền file gốc, ApiService sẽ gửi multipart
+      birthday: apiBirthday,
+      imageFile: _selectedImage,
     );
 
     setState(() => _isLoading = false);
@@ -129,20 +163,73 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: "Hồ sơ của tôi",
           ),
           Expanded(
-            child: SingleChildScrollView(
+            child: _isLoading 
+            ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFC529)))
+            : SingleChildScrollView(
               padding: const EdgeInsets.all(20),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
                     onTap: _pickImage,
-                    child: CircleAvatar(
-                      radius: 60,
-                      backgroundColor: Colors.grey[200],
-                      backgroundImage: _getAvatarImage(), // Hàm xử lý ảnh mới
-                      child: _getAvatarImage() == null 
-                          ? const Icon(Icons.camera_alt, size: 40, color: Colors.grey) 
-                          : null,
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 120,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: Colors.grey[200],
+                            borderRadius: BorderRadius.circular(20),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(20),
+                            child: _getAvatarImage() != null
+                                ? Image(
+                                    image: _getAvatarImage()!,
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 120,
+                                  )
+                                : const Icon(
+                                    Icons.person,
+                                    size: 60,
+                                    color: Colors.grey,
+                                  ),
+                          ),
+                        ),
+
+                        // 2. Icon Camera nhỏ
+                        Positioned(
+                          bottom: -5,
+                          right: -5,
+                          child: Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 5,
+                                )
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.camera_alt_outlined, 
+                              size: 20, 
+                              color: AppColors.primaryOrange,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -151,78 +238,89 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     controller: _nameController,
                     title: "Họ Tên",
                     hintText: _currentUser?.fullname ?? "Nhập họ tên",
+                    suffixIcon: const Icon(Icons.person_outlined),
                   ),
 
                   CustomTextField(
                     controller: _dobController,
                     title: "Ngày sinh",
-                    hintText: _currentUser?.birthday ?? "Nhập ngày sinh",
+                    hintText: _currentUser?.birthday ?? "dd-MM-yyyy",
+                    suffixIcon: const Icon(Icons.calendar_today_outlined),
                     onTap: () => _selectDate(context),
+                    textRead: true,
                   ),
 
                   CustomTextField(
                     controller: _emailController,
                     title: "Email",
                     hintText: _currentUser?.email ?? "Nhập email",
+                    suffixIcon: const Icon(Icons.email_outlined),
                   ),
 
                   CustomTextField(
                     controller: _phoneController,
                     title: "Số Điện Thoại",
                     hintText: _currentUser?.phone ?? "Nhập số điện thoại",
+                    suffixIcon: const Icon(Icons.phone_outlined),
                   ),
 
                   const SizedBox(height: 20),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 30,
-                    child: OutlinedButton(
-                      onPressed: () {
-                        // Navigate to address screen logic
-                      },
-                      style: OutlinedButton.styleFrom(
-                        side: const BorderSide(color: Color(0xFFFFC529)),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                      ),
-                      child: const Text(
-                        "Thay đổi địa chỉ",
-                        style: TextStyle(
-                          color: Color(0xFFFFC529),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 15),
-
-                  // Nút Update Profile
-                  SizedBox(
-                    width: double.infinity,
-                    height: 30,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _updateProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFC529),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                          "Cập nhật hồ sơ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
+                  Row(
+                    children: [
+                    //  Nút thay đổi địa chỉ
+                    Expanded(
+                      child: SizedBox(
+                        height: 45, // Tăng chiều cao chút cho dễ bấm
+                        child: ElevatedButton(
+                          onPressed: () {
+                            // Navigate logic
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 3,
+                          ),
+                          child: const Text(
+                            "Thay đổi địa chỉ",
+                            style: TextStyle(
+                              color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                            ),
                           ),
                         ),
+                      ),
                     ),
+                            
+                    const SizedBox(width: 15), // Khoảng cách giữa 2 nút
+
+                    // Nút cập nhật
+                    Expanded(
+                      child: SizedBox(
+                        height: 45,
+                        child: ElevatedButton(
+                          onPressed: _isLoading ? null : _updateProfile,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppColors.primaryOrange,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(30),
+                            ),
+                            elevation: 3,
+                          ),
+                          child: const Text(
+                            "Cập nhật thông tin",
+                            style: TextStyle(
+                              color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),

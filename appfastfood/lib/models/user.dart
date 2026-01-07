@@ -35,7 +35,7 @@ class User {
       fullname: json['fullname'] ?? '',
       email: json['email'] ?? '',
       phone: json['phone'] ?? '',
-      birthday: json['birthday'],
+      birthday: json['BirthDay'],
       image: json['Image'], 
     );
   }

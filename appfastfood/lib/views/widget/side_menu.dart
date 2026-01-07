@@ -36,19 +36,21 @@ class _SideMenuState extends State<SideMenu> {
     setState(() {
       if (token != null && token.isNotEmpty && userJsonString != null) {
         _isLoggedIn = true;
+        try {
+          Map<String, dynamic> userMap = jsonDecode(userJsonString);
+          User currentUser = User.fromJson(userMap);
 
-        Map<String, dynamic> userMap = jsonDecode(userJsonString);
-        User currentUser = User.fromJson(userMap);
-
-        _userName = currentUser.username;
-        _userEmail = currentUser.email;
-        
-        _avatarUrl = currentUser.image; 
-        
+          _userName = currentUser.username;
+          _userEmail = currentUser.email;
+          _avatarUrl = currentUser.image; 
+        } catch (e) {
+          print("Lỗi parse user data: $e");
+        }
       } else {
         _isLoggedIn = false;
         _userName = "Khách";
         _userEmail = "Vui lòng đăng nhập";
+        _avatarUrl = null;
       }
     });
   }
@@ -62,6 +64,8 @@ class _SideMenuState extends State<SideMenu> {
     if (mounted) {
       setState(() {
         _isLoggedIn = false;
+        _userName = "Khách";
+        _avatarUrl = null;
       });
 
       Navigator.pop(context);
@@ -76,7 +80,7 @@ class _SideMenuState extends State<SideMenu> {
 
   @override
   Widget build(BuildContext context) {
-    bool hasImage = _isLoggedIn && _avatarUrl != null && _avatarUrl!.isNotEmpty;
+    ImageProvider? avatarImage = _isLoggedIn ? _getAvatarProvider(_avatarUrl) : null;
     return Drawer(
       width: MediaQuery.of(context).size.width * 0.75,
       shape: const RoundedRectangleBorder(
@@ -95,19 +99,19 @@ class _SideMenuState extends State<SideMenu> {
               // A. HEADER (AVATAR + INFO)
               Row(
                 children: [
-                  CircleAvatar(
-                    radius: 30,
-                    backgroundColor: Colors.white,
-                    backgroundImage: hasImage
-                        ? NetworkImage(_avatarUrl!)
-                        : null,
-                    child: !hasImage
-                        ? const Icon(
-                            Icons.person,
-                            size: 35,
-                            color: Color(0xFFE95322),
-                          )
-                        : null,
+                  Container(
+                    child: CircleAvatar(
+                      radius: 30,
+                      backgroundColor: Colors.white,
+                      backgroundImage: avatarImage,
+                      child: avatarImage == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 35,
+                              color: Color(0xFFE95322),
+                            )
+                          : null,
+                    ),
                   ),
                   const SizedBox(width: 15),
                   Expanded(
@@ -243,5 +247,25 @@ class _SideMenuState extends State<SideMenu> {
         size: 12,
       ),
     );
+  }
+
+  ImageProvider? _getAvatarProvider(String? imgString) {
+    if (imgString == null || imgString.isEmpty) {
+      return null;
+    }
+    try {
+      if (imgString.startsWith('data:image')) {
+        var parts = imgString.split(',');
+        if (parts.length > 1) {
+          return MemoryImage(base64Decode(parts[1]));
+        }
+      }
+      if (imgString.startsWith('http')) {
+        return NetworkImage(imgString);
+      }
+    } catch (e) {
+      print("Lỗi hiển thị ảnh avatar: $e");
+    }
+    return null;
   }
 }

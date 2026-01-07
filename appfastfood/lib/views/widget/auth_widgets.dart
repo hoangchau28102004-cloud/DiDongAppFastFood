@@ -57,6 +57,7 @@ class CustomTextField extends StatelessWidget {
   final String hintText;
   final String? title;
   final bool obscureText;
+  final bool textRead;
   final Widget? suffixIcon;
   final TextInputType? keyboardType;
   final List<TextInputFormatter> inputFormatters;
@@ -68,6 +69,7 @@ class CustomTextField extends StatelessWidget {
     required this.hintText,
     this.title,
     this.obscureText = false,
+    this.textRead=false,
     this.suffixIcon,
     this.keyboardType,
     this.inputFormatters = const [],
@@ -90,9 +92,10 @@ class CustomTextField extends StatelessWidget {
           const SizedBox(height: 5),
         ],
 
-        TextField(
+        TextFormField(
           controller: controller,
           obscureText: obscureText,
+          readOnly: textRead,
           keyboardType: keyboardType,
           onTap: onTap,
           inputFormatters: inputFormatters,
