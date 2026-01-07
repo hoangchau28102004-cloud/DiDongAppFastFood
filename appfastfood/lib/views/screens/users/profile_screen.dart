@@ -41,28 +41,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (token != null) {
       // Gọi API lấy thông tin mới nhất
       User? userFetchedFromApi = await ApiService().getProfile();
-      
+
       if (mounted) {
-          setState(() {
-            _currentUser = userFetchedFromApi;
+        setState(() {
+          _currentUser = userFetchedFromApi;
 
-            _nameController.text = _currentUser?.fullname ?? "";
-            _emailController.text = _currentUser?.email ?? "";
-            _phoneController.text = _currentUser?.phone ?? "";
-            _dobController.text = _currentUser!.birthday!;
+          _nameController.text = _currentUser?.fullname ?? "";
+          _emailController.text = _currentUser?.email ?? "";
+          _phoneController.text = _currentUser?.phone ?? "";
+          _dobController.text = _currentUser!.birthday!;
 
-            if (_currentUser?.birthday != null &&  _currentUser!.birthday != "null") {
-               try {
-                 DateTime date = DateTime.parse(_currentUser!.birthday!);
-                 _dobController.text = DateFormat('yyyy-MM-dd').format(date);
-               } catch (e) {
-                 _dobController.text = _currentUser!.birthday!; // Nếu lỗi format thì hiện nguyên gốc
-               }
-            } else {
-               _dobController.text = "";
+          if (_currentUser?.birthday != null &&
+              _currentUser!.birthday != "null") {
+            try {
+              DateTime date = DateTime.parse(_currentUser!.birthday!);
+              _dobController.text = DateFormat('yyyy-MM-dd').format(date);
+            } catch (e) {
+              _dobController.text =
+                  _currentUser!.birthday!; // Nếu lỗi format thì hiện nguyên gốc
             }
-          });
-        }
+          } else {
+            _dobController.text = "";
+          }
+        });
+      }
     }
   }
 
@@ -94,7 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Hàm lưu thông tin
   Future<void> _updateProfile() async {
     setState(() => _isLoading = true);
-    
+
     // Gọi API update
     bool success = await ApiService().updateProfile(
       fullname: _nameController.text,
@@ -107,14 +109,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cập nhật thành công!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thành công!")));
       _loadUserProfile(); // Load lại để thấy ảnh mới từ DB trả về
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cập nhật thất bại!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thất bại!")));
     }
   }
 
@@ -124,10 +126,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const TopBarPage(
-            showBackButton: true,
-            title: "Hồ sơ của tôi",
-          ),
+          const TopBarPage(showBackButton: true, title: "Hồ sơ của tôi"),
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(20),
@@ -140,8 +139,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       radius: 60,
                       backgroundColor: Colors.grey[200],
                       backgroundImage: _getAvatarImage(), // Hàm xử lý ảnh mới
-                      child: _getAvatarImage() == null 
-                          ? const Icon(Icons.camera_alt, size: 40, color: Colors.grey) 
+                      child: _getAvatarImage() == null
+                          ? const Icon(
+                              Icons.camera_alt,
+                              size: 40,
+                              color: Colors.grey,
+                            )
                           : null,
                     ),
                   ),
@@ -212,22 +215,22 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         ),
                         elevation: 0,
                       ),
-                      child: _isLoading 
-                        ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                          "Cập nhật hồ sơ",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
+                      child: _isLoading
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Cập nhật hồ sơ",
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 16,
+                              ),
+                            ),
                     ),
                   ),
                 ],
               ),
-            )
-          )
+            ),
+          ),
         ],
       ),
     );
@@ -246,7 +249,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (imgString.startsWith('data:image')) {
           var parts = imgString.split(',');
           if (parts.length > 1) {
-             return MemoryImage(base64Decode(parts[1]));
+            return MemoryImage(base64Decode(parts[1]));
           }
         }
 
@@ -257,6 +260,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         print("Lỗi parse ảnh: $e");
       }
     }
-    return null; 
+    return null;
   }
 }

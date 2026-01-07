@@ -1,5 +1,4 @@
 import 'dart:io';
-
 import 'package:appfastfood/models/cartItem.dart';
 import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/models/promotion.dart';
@@ -13,7 +12,7 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -97,7 +96,7 @@ class ApiService {
         final data = jsonDecode(response.body);
         if (data['success'] == true && data['user'] != null) {
           User user = User.fromJson(data['user']);
-          await StorageHelper.saveImage(user.image); 
+          await StorageHelper.saveImage(user.image);
           await StorageHelper.saveFullname(user.fullname);
           return user;
         }
@@ -118,8 +117,10 @@ class ApiService {
   }) async {
     try {
       final token = await StorageHelper.getToken();
-      final url = Uri.parse('$urlEdit/api/profile/update');
-      var request = http.MultipartRequest('POST', url);
+      if (token == null) return false;
+
+      var uri = Uri.parse('$urlEdit/api/profile/update');
+      var request = http.MultipartRequest('POST', uri);
 
       // Header Authorization
       request.headers['Authorization'] = 'Bearer $token';
@@ -131,7 +132,7 @@ class ApiService {
 
       if (imageFile != null) {
         var pic = await http.MultipartFile.fromPath(
-          'image', 
+          'image',
           imageFile.path,
           contentType: MediaType('image', 'jpeg'),
         );
@@ -144,13 +145,13 @@ class ApiService {
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         if (data['success'] == true) {
-            // Cập nhật lại StorageHelper nếu server trả về user mới
-            if (data['user'] != null) {
-              User updatedUser = User.fromJson(data['user']);
-              await StorageHelper.saveImage(updatedUser.image);
-              await StorageHelper.saveFullname(updatedUser.fullname);
-            }
-            return true;
+          // Cập nhật lại StorageHelper nếu server trả về user mới
+          if (data['user'] != null) {
+            User updatedUser = User.fromJson(data['user']);
+            await StorageHelper.saveImage(updatedUser.image);
+            await StorageHelper.saveFullname(updatedUser.fullname);
+          }
+          return true;
         }
       } else {
         print("Update Failed: ${response.body}");
@@ -435,10 +436,11 @@ class ApiService {
       return false;
     }
   }
-  //Lấy mã Khuyến Mãi 
+
+  //Lấy mã Khuyến Mãi
   Future<List<Promotion>> getPromotions() async {
-    final url = Uri.parse('$urlEdit/promotions'); 
-    
+    final url = Uri.parse('$urlEdit/promotions');
+
     try {
       final response = await http.get(url);
 
@@ -450,7 +452,7 @@ class ApiService {
       }
     } catch (e) {
       print("Lỗi lấy khuyến mãi: $e");
-      return []; 
+      return [];
     }
   }
 }
