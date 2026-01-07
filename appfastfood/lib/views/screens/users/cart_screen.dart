@@ -15,8 +15,7 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   List<CartItem> _cartItem = [];
   bool _isLoading = true;
-  double _subTotal = 0.0; // Tổng phụ
-  double _discount = 0.3; // Khuyến mãi 30% (ví dụ fix cứng giống ảnh)
+  double _subTotal = 0.0;
   final currentFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
   @override
@@ -43,7 +42,7 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  void _calculateTotal() {
+  double _calculateTotal() {
     double temp = 0;
     for (var item in _cartItem) {
       temp += item.price * item.quantity;
@@ -51,36 +50,70 @@ class _CartScreenState extends State<CartScreen> {
     setState(() {
       _subTotal = temp;
     });
+    return _subTotal;
   }
 
-  Future<void> _updateItem(int index, int newQuantity, String newNote) async {
+  Future<void> _deleteItem(int index) async {
     final item = _cartItem[index];
-    if (newQuantity <= 0) {
-      // Xử lý xóa item nếu cần (hoặc hỏi xác nhận trước khi xóa)
+    bool success = await ApiService().removeCart(item.cartId);
+    if (success) {
       setState(() {
         _cartItem.removeAt(index);
         _calculateTotal();
       });
-      // Gọi API xóa item ở đây nếu có
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Đã xóa khỏi giỏ hàng")));
     } else {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Thực hiện đã bị lỗi")));
+    }
+  }
+
+  Future<void> _updateItem(int index, int newQuantity, String newNote) async {
+    final item = _cartItem[index];
+    int oldQuantity = item.quantity;
+    setState(() {
+      item.quantity = newQuantity;
+      _calculateTotal();
+    });
+
+    try {
+      bool success = await ApiService().updateCart(
+        item.cartId,
+        newQuantity,
+        newNote,
+      );
+      if (!success) {
+        setState(() {
+          item.quantity = oldQuantity;
+          _calculateTotal();
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text("Lỗi kết nối, không cập nhật được giỏ hàng"),
+            ),
+          );
+        }
+      }
+    } catch (e) {
       setState(() {
-        item.quantity = newQuantity;
+        item.quantity = oldQuantity;
         _calculateTotal();
       });
+      print("Lỗi update: $e");
     }
-    await ApiService().updateCart(item.cartId, newQuantity, newNote);
   }
 
   @override
   Widget build(BuildContext context) {
-    // Tính toán số liệu hiển thị
-    double discountAmount = _subTotal * _discount;
-    double finalTotal = _subTotal - discountAmount;
+    double finalTotal = _calculateTotal();
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Màu nền nhẹ
       appBar: AppBar(
-        backgroundColor: const Color(0xFFFFC529), // Màu vàng
+        backgroundColor: const Color(0xFFFFC529),
         elevation: 0,
         centerTitle: true,
         title: const Text(
@@ -103,7 +136,6 @@ class _CartScreenState extends State<CartScreen> {
                 padding: const EdgeInsets.all(20),
                 child: Column(
                   children: [
-                    // --- Dòng thông báo số lượng ---
                     Text(
                       "Bạn Có ${_cartItem.length} Món Ăn Trong Giỏ Hàng",
                       style: const TextStyle(
@@ -113,9 +145,6 @@ class _CartScreenState extends State<CartScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-
-                    // --- Danh sách sản phẩm ---
-                    // Dùng ListView.builder để render danh sách
                     _cartItem.isEmpty
                         ? const Center(child: Text("Giỏ hàng trống"))
                         : ListView.builder(
@@ -130,15 +159,20 @@ class _CartScreenState extends State<CartScreen> {
                                   _updateItem(
                                     index,
                                     item.quantity + 1,
-                                    item.note ?? "",
+                                    item.note ?? "Không ghi chú",
                                   );
                                 },
                                 onDecrease: () {
-                                  _updateItem(
-                                    index,
-                                    item.quantity - 1,
-                                    item.note ?? "",
-                                  );
+                                  if (item.quantity > 1) {
+                                    _updateItem(
+                                      index,
+                                      item.quantity - 1,
+                                      item.note ?? "Không ghi chú",
+                                    );
+                                  }
+                                },
+                                onDelete: () {
+                                  _deleteItem(index);
                                 },
                               );
                             },
@@ -151,13 +185,9 @@ class _CartScreenState extends State<CartScreen> {
                     // --- Phần Tổng Tiền ---
                     _buildSummaryRow("Tổng Phụ", _subTotal),
                     const SizedBox(height: 10),
-                    _buildSummaryRow(
-                      "Khuyến Mãi",
-                      discountAmount,
-                      isDiscount: true,
-                    ), // Hiển thị % hoặc số tiền giảm
+                    _buildSummaryRow("Khuyến Mãi", 0, isDiscount: false),
                     const SizedBox(height: 10),
-                    Divider(), // Khoảng trắng ảo hoặc kẻ ngang
+                    Divider(),
 
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -181,20 +211,13 @@ class _CartScreenState extends State<CartScreen> {
                     ),
 
                     const SizedBox(height: 30),
-
-                    // --- Nút Xác Nhận ---
                     SizedBox(
                       width: double.infinity,
                       height: 55,
                       child: ElevatedButton(
-                        onPressed: () {
-                          // Xử lý sự kiện đặt hàng / thanh toán
-                          print("Đã bấm xác nhận");
-                        },
+                        onPressed: () {},
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(
-                            0xFFFFC529,
-                          ), // Màu nền nút (màu da cam nhạt trong ảnh)
+                          backgroundColor: const Color(0xFFFFC529),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(15),
                           ),
@@ -217,7 +240,6 @@ class _CartScreenState extends State<CartScreen> {
     );
   }
 
-  // Widget con để vẽ các dòng tổng tiền cho gọn code
   Widget _buildSummaryRow(
     String label,
     double amount, {
@@ -231,11 +253,7 @@ class _CartScreenState extends State<CartScreen> {
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         Text(
-          isDiscount
-              ? "30%"
-              : currentFormat.format(
-                  amount,
-                ), // Nếu là khuyến mãi thì hiện 30% như ảnh
+          isDiscount ? "% khi chọn khuyến mãi" : currentFormat.format(amount),
           style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
       ],

@@ -467,16 +467,8 @@ export default class userController {
     static async updateCartItem(req,res){
         try {
             const { cart_id, quantity, note } = req.body;
-
-            if(quantity <= 0){
-                await userModel.removeCartItem(cart_id);
-                return res.status(200).json({
-                    success: true,
-                    message: 'Xóa thành công'
-                });
-            }
-
-            await userModel.updateCart(cart_id,quantity,note || "");
+            console.log('Đã nhận: ',cart_id,quantity,note ?? "Không ghi chú");
+            await userModel.updateCart(cart_id,quantity,note);
             res.status(200).json({
                 success: true,
                 message: 'Cập nhật thành công'
@@ -484,6 +476,22 @@ export default class userController {
         } catch (error) {
             console.error("Get Cart Err",error);
             res.status(500).json({
+                success: false,
+                message: "Lỗi server"
+            });
+        }
+    }
+
+    static async removeCartItem(req,res){
+        try {
+            const { cart_id } = req.body;
+            await userModel.removeCartItem(cart_id);
+            return res.status(200).json({
+                success: true,
+                message: 'Xóa thành công'
+            });
+        } catch (error) {
+             res.status(500).json({
                 success: false,
                 message: "Lỗi server"
             });

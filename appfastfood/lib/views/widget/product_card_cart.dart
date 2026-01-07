@@ -2,15 +2,17 @@ import 'package:appfastfood/models/cartItem.dart';
 import 'package:flutter/material.dart';
 
 class CardProductCart extends StatefulWidget {
-  final CartItem item; // Dữ liệu món ăn
+  final CartItem item;
   final VoidCallback onIncrease; // Hàm gọi khi bấm tăng
   final VoidCallback onDecrease; // Hàm gọi khi bấm giảm
+  final VoidCallback onDelete;
 
   const CardProductCart({
     super.key,
     required this.item,
     required this.onIncrease,
     required this.onDecrease,
+    required this.onDelete,
   });
 
   @override
@@ -21,25 +23,17 @@ class _CardProductCartState extends State<CardProductCart> {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(
-        vertical: 10,
-      ), // Khoảng cách giữa các món
+      margin: const EdgeInsets.symmetric(vertical: 10),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(15),
         boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            spreadRadius: 1,
-            blurRadius: 5,
-            offset: const Offset(0, 3),
-          ),
+          BoxShadow(color: Colors.grey.withOpacity(0.1), blurRadius: 5),
         ],
       ),
       child: Row(
         children: [
-          // 1. Ảnh sản phẩm
           ClipRRect(
             borderRadius: BorderRadius.circular(15),
             child: SizedBox(
@@ -76,18 +70,16 @@ class _CardProductCartState extends State<CardProductCart> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  '${widget.item.price}đ', // Hoặc format tiền tệ nếu muốn
+                  '${widget.item.price} VNĐ', // Hoặc format tiền tệ nếu muốn
                   style: const TextStyle(
                     fontSize: 16,
-                    color: Color(0xFFE95322), // Màu cam giống thiết kế
+                    color: Color(0xFFE95322),
                     fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
             ),
           ),
-
-          // 3. Nút Tăng/Giảm số lượng
           Row(
             children: [
               // Nút Trừ
@@ -96,10 +88,14 @@ class _CardProductCartState extends State<CardProductCart> {
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
-                    color: Colors.grey[200],
+                    color: Color(0xFFE95322),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(Icons.remove, size: 18, color: Colors.grey),
+                  child: const Icon(
+                    Icons.remove,
+                    size: 18,
+                    color: Colors.white,
+                  ),
                 ),
               ),
 
@@ -113,20 +109,30 @@ class _CardProductCartState extends State<CardProductCart> {
                   ),
                 ),
               ),
-
-              // Nút Cộng
               InkWell(
                 onTap: widget.onIncrease,
                 child: Container(
                   padding: const EdgeInsets.all(4),
                   decoration: const BoxDecoration(
-                    color: Color(0xFFE95322), // Màu cam
+                    color: Color(0xFFE95322),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(Icons.add, size: 18, color: Colors.white),
                 ),
               ),
             ],
+          ),
+          SizedBox(width: 20),
+          InkWell(
+            onTap: widget.onDelete,
+            child: Container(
+              padding: const EdgeInsets.all(4),
+              decoration: const BoxDecoration(
+                color: Color(0xFFE95322),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.delete_outlined),
+            ),
           ),
         ],
       ),

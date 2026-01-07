@@ -201,8 +201,9 @@ export default class userModel {
     }
 
     static async updateCart(cartId,quantity,note){
-        const sql = `UPDATE carts SET quantity = ?, note = ? updated_at = NOW() WHERE cart_id = ?`;
-        return await execute(sql,[cartId,quantity,note]);
+    const sql = `UPDATE carts SET quantity = ?, note = ?, updated_at = NOW() WHERE cart_id = ?`;
+    
+    return await execute(sql, [quantity, note, cartId]);
     }
 
     static async getCartByUserId(userId){

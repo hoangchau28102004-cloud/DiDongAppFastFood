@@ -237,7 +237,6 @@ class ApiService {
         throw Exception("Server Error: ${response.statusCode}");
       }
     } catch (e) {
-      //print("Error fetching products: $e");
       return []; // Trả về rỗng để UI không bị crash
     }
   }
@@ -407,7 +406,7 @@ class ApiService {
   Future<bool> updateCart(int cartId, int quantity, String note) async {
     final token = await StorageHelper.getToken();
     final res = await http.put(
-      Uri.parse('$baseUrl/api/cart/update'),
+      Uri.parse('$baseUrl/api/carts/update'),
       headers: {
         'Content-Type': 'application/json',
         'Authorization': 'Bearer $token',
@@ -415,5 +414,30 @@ class ApiService {
       body: jsonEncode({'cart_id': cartId, 'quantity': quantity, 'note': note}),
     );
     return res.statusCode == 200;
+  }
+
+  Future<bool> removeCart(int cartId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final res = await http.delete(
+        Uri.parse('$urlEdit/api/carts/delete'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'cart_id': cartId}),
+      );
+
+      if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        return data['success'] == true;
+      }
+      return false;
+    } catch (e) {
+      print('Lỗi removeCart $e');
+      return false;
+    }
   }
 }
