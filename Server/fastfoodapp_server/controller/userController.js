@@ -198,16 +198,10 @@ export default class userController {
                 return res.status(400).json({ success: false, message: 'Email không hợp lệ' });
             }
 
-            const result = await userModel.updateUser(userId, { 
-                fullname, 
-                email, 
-                phone, 
-                birthday, 
-                image: imageBase64 
-            });
+            const result = await userModel.updateUser(userId, { fullname, email, phone, birthday, image: imagePath });
 
             if (!result.success && result.message) {
-                 return res.status(400).json(result);
+                 return res.status(400).json({result});
             }
 
             const updatedUser = await userModel.findById(userId);

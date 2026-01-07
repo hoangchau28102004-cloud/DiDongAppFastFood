@@ -141,14 +141,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cập nhật thành công!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thành công!")));
       _loadUserProfile(); // Load lại để thấy ảnh mới từ DB trả về
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Cập nhật thất bại!")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thất bại!")));
     }
   }
 
@@ -158,10 +158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       backgroundColor: Colors.white,
       body: Column(
         children: [
-          const TopBarPage(
-            showBackButton: true,
-            title: "Hồ sơ của tôi",
-          ),
+          const TopBarPage(showBackButton: true, title: "Hồ sơ của tôi"),
           Expanded(
             child: _isLoading 
             ? const Center(child: CircularProgressIndicator(color: Color(0xFFFFC529)))
@@ -324,8 +321,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ],
               ),
-            )
-          )
+            ),
+          ),
         ],
       ),
     );
@@ -344,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (imgString.startsWith('data:image')) {
           var parts = imgString.split(',');
           if (parts.length > 1) {
-             return MemoryImage(base64Decode(parts[1]));
+            return MemoryImage(base64Decode(parts[1]));
           }
         }
 
@@ -355,6 +352,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
         print("Lỗi parse ảnh: $e");
       }
     }
-    return null; 
+    return null;
   }
 }
