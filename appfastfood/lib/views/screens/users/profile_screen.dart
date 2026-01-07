@@ -38,25 +38,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Giả sử ApiService có hàm getProfile trả về User object
     // Nếu chưa có bạn dùng hàm userController.profile ở Backend để gọi
     // Ở đây mình giả định bạn đã có hàm lấy info, hoặc lấy tạm từ Storage
-    
+
     // Gọi API lấy thông tin mới nhất
     try {
-      final user = await ApiService().getProfile(); // Bạn cần đảm bảo hàm này có trong ApiService
+      final user = await ApiService()
+          .getProfile(); // Bạn cần đảm bảo hàm này có trong ApiService
       if (user != null) {
         setState(() {
           _currentUser = user;
           _nameController.text = user.fullname;
           _emailController.text = user.email;
           _phoneController.text = user.phone;
-          
+
           // Xử lý ngày sinh
           if (user.birthday != null) {
             // Cắt chuỗi lấy yyyy-MM-dd nếu database trả về datetime dài
-            String rawDate = user.birthday!; 
-            if(rawDate.length >= 10) {
-               _dobController.text = rawDate.substring(0, 10);
+            String rawDate = user.birthday!;
+            if (rawDate.length >= 10) {
+              _dobController.text = rawDate.substring(0, 10);
             } else {
-               _dobController.text = rawDate;
+              _dobController.text = rawDate;
             }
           }
         });
@@ -96,8 +97,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   // Hàm lưu thông tin
   Future<void> _updateProfile() async {
     if (_nameController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Vui lòng nhập họ tên")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Vui lòng nhập họ tên")));
       return;
     }
 
@@ -114,13 +116,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
     setState(() => _isLoading = false);
 
     if (success) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cập nhật thành công!")));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Cập nhật thành công!")));
       // Refresh lại data
       _loadUserProfile();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Cập nhật thất bại. Kiểm tra lại Email/SĐT")));
+        const SnackBar(
+          content: Text("Cập nhật thất bại. Kiểm tra lại Email/SĐT"),
+        ),
+      );
     }
   }
 
@@ -151,14 +157,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 height: 130,
                                 decoration: BoxDecoration(
                                   border: Border.all(
-                                      width: 4,
-                                      color: Theme.of(context).scaffoldBackgroundColor),
+                                    width: 4,
+                                    color: Theme.of(
+                                      context,
+                                    ).scaffoldBackgroundColor,
+                                  ),
                                   boxShadow: [
                                     BoxShadow(
-                                        spreadRadius: 2,
-                                        blurRadius: 10,
-                                        color: Colors.black.withOpacity(0.1),
-                                        offset: const Offset(0, 10))
+                                      spreadRadius: 2,
+                                      blurRadius: 10,
+                                      color: Colors.black.withOpacity(0.1),
+                                      offset: const Offset(0, 10),
+                                    ),
                                   ],
                                   shape: BoxShape.circle,
                                 ),
@@ -180,9 +190,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                       shape: BoxShape.circle,
                                       border: Border.all(
                                         width: 4,
-                                        color: Theme.of(context).scaffoldBackgroundColor,
+                                        color: Theme.of(
+                                          context,
+                                        ).scaffoldBackgroundColor,
                                       ),
-                                      color: Colors.orange, // Màu chủ đạo của App
+                                      color:
+                                          Colors.orange, // Màu chủ đạo của App
                                     ),
                                     child: const Icon(
                                       Icons.camera_alt,
@@ -191,50 +204,71 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                     ),
                                   ),
                                 ),
-                              )
+                              ),
                             ],
                           ),
                         ),
-                        
+
                         const SizedBox(height: 35),
 
                         // --- CÁC FORM NHẬP LIỆU ---
                         CustomTextField(
-                            title: "Họ và tên",
-                            controller: _nameController,
-                            hintText: User != null ? _currentUser!.fullname : "",
-                            suffixIcon: const Icon(Icons.person, color: AppColors.primaryOrange)),
+                          title: "Họ và tên",
+                          controller: _nameController,
+                          hintText: _currentUser != null
+                              ? _currentUser!.fullname
+                              : "",
+                          suffixIcon: const Icon(
+                            Icons.person,
+                            color: AppColors.primaryOrange,
+                          ),
+                        ),
                         const SizedBox(height: 20),
-                        
+
                         CustomTextField(
-                            title: "Email",
-                            controller: _emailController,
-                            hintText: User != null ? _currentUser!.email : "",
-                            suffixIcon: const Icon(Icons.email, color: AppColors.primaryOrange),
-                            keyboardType: TextInputType.emailAddress),
+                          title: "Email",
+                          controller: _emailController,
+                          hintText: _currentUser != null
+                              ? _currentUser!.email
+                              : "",
+                          suffixIcon: const Icon(
+                            Icons.email,
+                            color: AppColors.primaryOrange,
+                          ),
+                          keyboardType: TextInputType.emailAddress,
+                        ),
                         const SizedBox(height: 20),
-                        
+
                         CustomTextField(
-                            title: "Số điện thoại",
-                            controller: _phoneController,
-                            hintText: User != null ? _currentUser!.phone : "",
-                            suffixIcon: const Icon(Icons.phone, color: AppColors.primaryOrange),
-                            keyboardType: TextInputType.phone),
+                          title: "Số điện thoại",
+                          controller: _phoneController,
+                          hintText: _currentUser != null
+                              ? _currentUser!.phone
+                              : "",
+                          suffixIcon: const Icon(
+                            Icons.phone,
+                            color: AppColors.primaryOrange,
+                          ),
+                          keyboardType: TextInputType.phone,
+                        ),
                         const SizedBox(height: 20),
-                        
+
                         // Ô chọn ngày sinh (Bấm vào hiện lịch)
                         GestureDetector(
                           onTap: () => _selectDate(context),
                           child: AbsorbPointer(
                             child: CustomTextField(
-                                title: "Ngày sinh",
-                                controller: _dobController,
-                                hintText: "Chọn ngày sinh",
-                                suffixIcon: const Icon(Icons.calendar_today, color: AppColors.primaryOrange),
+                              title: "Ngày sinh",
+                              controller: _dobController,
+                              hintText: "Chọn ngày sinh",
+                              suffixIcon: const Icon(
+                                Icons.calendar_today,
+                                color: AppColors.primaryOrange,
+                              ),
                             ),
                           ),
                         ),
-                        
+
                         const SizedBox(height: 40),
 
                         // --- CÁC NÚT  ---
@@ -246,22 +280,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.grey,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                               ),
-                              child: const Text("Thay đổi địa chỉ",
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.white)),
+                              child: const Text(
+                                "Thay đổi địa chỉ",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                             ElevatedButton(
                               onPressed: _updateProfile,
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: Colors.orange,
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 10),
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
                               ),
-                              child: const Text("Cập nhật hồ sơ",
-                                  style: TextStyle(
-                                      fontSize: 16, color: Colors.white)),
+                              child: const Text(
+                                "Cập nhật hồ sơ",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ),
                           ],
                         ),
@@ -284,6 +330,8 @@ class _ProfileScreenState extends State<ProfileScreen> {
       // Cần đảm bảo ApiService.BaseUrl không có dấu / ở cuối hoặc xử lý nối chuỗi đúng
       return NetworkImage('${ApiService.BaseUrl}/${_currentUser!.image}');
     }
-    return const AssetImage("assets/images/default_avatar.png"); // Nhớ có ảnh này trong assets
+    return const AssetImage(
+      "assets/images/default_avatar.png",
+    ); // Nhớ có ảnh này trong assets
   }
 }

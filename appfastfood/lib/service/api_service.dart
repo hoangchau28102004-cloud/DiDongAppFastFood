@@ -105,7 +105,13 @@ class ApiService {
   }
 
   // Cập nhật thông tin profile
-  Future<bool> updateProfile(String fullname, String email, String phone, String birthday, File? imageFile) async {
+  Future<bool> updateProfile(
+    String fullname,
+    String email,
+    String phone,
+    String birthday,
+    File? imageFile,
+  ) async {
     try {
       final token = await StorageHelper.getToken();
       if (token == null) return false;
@@ -113,9 +119,7 @@ class ApiService {
       var uri = Uri.parse('$urlEdit/api/users/profile/update');
       var request = http.MultipartRequest('POST', uri);
 
-      request.headers.addAll({
-        'Authorization': 'Bearer $token',
-      });
+      request.headers.addAll({'Authorization': 'Bearer $token'});
 
       // Thêm các fields text
       request.fields['fullname'] = fullname;
@@ -127,7 +131,7 @@ class ApiService {
       if (imageFile != null) {
         var stream = http.ByteStream(imageFile.openRead());
         var length = await imageFile.length();
-        
+
         var multipartFile = http.MultipartFile(
           'image',
           stream,
@@ -144,7 +148,7 @@ class ApiService {
       if (response.statusCode == 200) {
         final respStr = await response.stream.bytesToString();
         final jsonResponse = jsonDecode(respStr);
-        
+
         if (jsonResponse['success'] == true) {
           var updatedUser = User.fromJson(jsonResponse['user']);
           await StorageHelper.saveFullname(updatedUser.fullname);
