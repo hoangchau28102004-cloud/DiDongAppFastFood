@@ -1,10 +1,7 @@
-<<<<<<< HEAD
 import 'dart:io';
 
-import 'package:appfastfood/models/user.dart';
-=======
 import 'package:appfastfood/models/cartItem.dart';
->>>>>>> c0e2d0c0ec800f594e68b7e8bed81f40e5ed214c
+import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
@@ -15,7 +12,7 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {

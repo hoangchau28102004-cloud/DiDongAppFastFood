@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'package:appfastfood/views/screens/home_screen.dart';
 import 'package:appfastfood/views/screens/users/profile_screen.dart';
 import 'package:appfastfood/views/screens/welcome_screen.dart';
+import 'package:appfastfood/views/screens/users/support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/account.dart';
@@ -41,14 +42,9 @@ class _SideMenuState extends State<SideMenu> {
 
         _userName = currentUser.username;
         _userEmail = currentUser.email;
-<<<<<<< HEAD
         
         _avatarUrl = currentUser.image; 
         
-=======
-
-        // _avatarUrl = currentUser.image;
->>>>>>> c0e2d0c0ec800f594e68b7e8bed81f40e5ed214c
       } else {
         _isLoggedIn = false;
         _userName = "Khách";
@@ -151,25 +147,17 @@ class _SideMenuState extends State<SideMenu> {
 
               // B. DANH SÁCH MENU
               if (_isLoggedIn) ...[
-                // _buildMenuItem(Icons.shopping_bag_outlined, "Giỏ Hàng", () {
-                //   Navigator.push(
-                //     context,
-                //     MaterialPageRoute(builder: (context) => CartScreen()),
-                //   );
-                // }),
+                
                 _buildMenuItem(Icons.person_outline, "Hồ sơ của tôi", () {
-<<<<<<< HEAD
                    Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
-=======
-                  // Navigator.push(context, MaterialPageRoute(builder: (context) => ProfileScreen()));
->>>>>>> c0e2d0c0ec800f594e68b7e8bed81f40e5ed214c
                 }),
                 _buildMenuItem(
                   Icons.location_on_outlined,
                   "Theo Dõi Đơn Hàng",
                   () {},
                 ),
-                _buildMenuItem(Icons.history, "Lịch Sử Mua Hàng", () {}),
+                _buildMenuItem(Icons.credit_card, "Phương Thức Thanh Toán", () {}),
+                _buildMenuItem(Icons.phone_in_talk_outlined, "Liên Hệ Với Cửa Hàng", () {}),
               ] else ...[
                 _buildMenuItem(Icons.login, "Đăng Nhập / Đăng Ký", () {
                   Navigator.pop(context);
@@ -182,9 +170,14 @@ class _SideMenuState extends State<SideMenu> {
                 }),
               ],
 
+              
+              _buildMenuItem(Icons.chat_bubble_outline, "Trợ Giúp", () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SupportScreen()),
+                    );
+                  }),
               _buildMenuItem(Icons.settings_outlined, "Cài Đặt", () {}),
-              _buildMenuItem(Icons.help_outline, "Trợ Giúp & Hỗ Trợ", () {}),
-
               const Spacer(),
 
               // C. NÚT ĐĂNG XUẤT

@@ -5,8 +5,8 @@ import 'package:appfastfood/utils/app_colors.dart';
 import 'package:appfastfood/views/widget/auth_widgets.dart';
 import 'package:appfastfood/views/widget/topbar_page.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart'; // Cần thêm intl vào pubspec.yaml để format ngày
+import 'package:image_picker/image_picker.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});

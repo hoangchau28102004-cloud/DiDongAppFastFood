@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:appfastfood/views/screens/home_screen.dart'; 
 
 class SupportScreen extends StatelessWidget {
   const SupportScreen({super.key});
@@ -35,11 +36,31 @@ class SupportScreen extends StatelessWidget {
         backgroundColor: const Color(0xFFFCD057),
         elevation: 0,
         centerTitle: true,
-        automaticallyImplyLeading: false,
+        // 1. NÚT BACK (Quay lại Menu/Màn hình trước)
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () {
+            Navigator.pop(context);
+          },
+        ),
         title: const Text(
           "Trợ Giúp",
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
+        // 2. NÚT HOME (Về trang chủ)
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.home_outlined, size: 30, color: Colors.white),
+            onPressed: () {
+              // Chuyển về Home và xóa các màn hình cũ trong stack
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (context) => const HomePageScreen()),
+                (route) => false,
+              );
+            },
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         child: Column(

@@ -1,5 +1,6 @@
 import 'package:appfastfood/views/screens/home_interface/favorite_content.dart';
 import 'package:appfastfood/views/screens/home_interface/home_content.dart';
+import 'package:appfastfood/views/screens/users/faq_screen.dart';
 import 'package:flutter/material.dart';
 import '../../models/products.dart';
 import '../../service/api_service.dart';
@@ -131,7 +132,7 @@ class _HomePageScreenState extends State<HomePageScreen> {
       case 3:
         return const Center(child: Text("Màn hình Lịch sử (Đang phát triển)"));
       case 4:
-        return const Center(child: Text("Màn hình Hỗ trợ (Đang phát triển)"));
+        return const FaqScreen();
       default:
         return const SizedBox();
     }
@@ -161,12 +162,13 @@ class _HomePageScreenState extends State<HomePageScreen> {
       bottomNavigationBar: CustomBottomBar(
         selectedIndex: _currentBottomIndex,
         onItemTapped: (index) {
-          setState(() {
-            _currentBottomIndex = index;
-            if (index == 2) {
-              _loadFavData();
-            }
-          });
+            // Các nút khác thì hoạt động như cũ
+            setState(() {
+              _currentBottomIndex = index;
+              if (index == 2) {
+                _loadFavData();
+              }
+            });
         },
       ),
     );
