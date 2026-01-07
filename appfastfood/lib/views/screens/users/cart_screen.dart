@@ -18,6 +18,8 @@ class _CartScreenState extends State<CartScreen> {
   double _subTotal = 0.0;
   final currentFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
+  final Set<int> _selecteItem = {};
+
   @override
   void initState() {
     super.initState();
@@ -30,6 +32,10 @@ class _CartScreenState extends State<CartScreen> {
       if (mounted) {
         setState(() {
           _cartItem = items;
+          _selecteItem.clear();
+          for (var item in items) {
+            _selecteItem.add(item.cartId);
+          }
           _calculateTotal();
           _isLoading = false;
         });
@@ -45,12 +51,38 @@ class _CartScreenState extends State<CartScreen> {
   double _calculateTotal() {
     double temp = 0;
     for (var item in _cartItem) {
-      temp += item.price * item.quantity;
+      if (_selecteItem.contains(item.cartId)) {
+        temp += item.price * item.quantity;
+      }
     }
     setState(() {
       _subTotal = temp;
     });
     return _subTotal;
+  }
+
+  void _choseItem(int cartId) {
+    setState(() {
+      if (_selecteItem.contains(cartId)) {
+        _selecteItem.remove(cartId);
+      } else {
+        _selecteItem.add(cartId);
+      }
+      _calculateTotal();
+    });
+  }
+
+  void _choseAll(bool? value) {
+    setState(() {
+      if (value == true) {
+        for (var item in _cartItem) {
+          _selecteItem.add(item.cartId);
+        }
+      } else {
+        _selecteItem.clear();
+      }
+      _calculateTotal();
+    });
   }
 
   Future<void> _deleteItem(int index) async {
@@ -110,8 +142,12 @@ class _CartScreenState extends State<CartScreen> {
   @override
   Widget build(BuildContext context) {
     double finalTotal = _calculateTotal();
+    // Logic kiểm tra chọn tất cả
+    bool isAllSelected =
+        _cartItem.isNotEmpty && _selecteItem.length == _cartItem.length;
 
     return Scaffold(
+      backgroundColor: Colors.grey[50], // Thêm màu nền nhẹ cho đẹp
       appBar: AppBar(
         backgroundColor: const Color(0xFFFFC529),
         elevation: 0,
@@ -132,109 +168,163 @@ class _CartScreenState extends State<CartScreen> {
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
           : SafeArea(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: Column(
-                  children: [
-                    Text(
-                      "Bạn Có ${_cartItem.length} Món Ăn Trong Giỏ Hàng",
-                      style: const TextStyle(
-                        color: Color(0xFFE95322),
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
                     ),
-                    const SizedBox(height: 20),
-                    _cartItem.isEmpty
-                        ? const Center(child: Text("Giỏ hàng trống"))
-                        : ListView.builder(
-                            shrinkWrap: true,
-                            physics: const NeverScrollableScrollPhysics(),
-                            itemCount: _cartItem.length,
-                            itemBuilder: (context, index) {
-                              final item = _cartItem[index];
-                              return CardProductCart(
-                                item: item,
-                                onIncrease: () {
-                                  _updateItem(
-                                    index,
-                                    item.quantity + 1,
-                                    item.note ?? "Không ghi chú",
-                                  );
-                                },
-                                onDecrease: () {
-                                  if (item.quantity > 1) {
-                                    _updateItem(
-                                      index,
-                                      item.quantity - 1,
-                                      item.note ?? "Không ghi chú",
-                                    );
-                                  }
-                                },
-                                onDelete: () {
-                                  _deleteItem(index);
-                                },
-                              );
-                            },
-                          ),
-
-                    const SizedBox(height: 30),
-                    const Divider(thickness: 1),
-                    const SizedBox(height: 20),
-
-                    // --- Phần Tổng Tiền ---
-                    _buildSummaryRow("Tổng Phụ", _subTotal),
-                    const SizedBox(height: 10),
-                    _buildSummaryRow("Khuyến Mãi", 0, isDiscount: false),
-                    const SizedBox(height: 10),
-                    Divider(),
-
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.1),
+                          blurRadius: 5,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
                       children: [
+                        Checkbox(
+                          value: isAllSelected,
+                          activeColor: const Color(0xFFE95322),
+                          onChanged: (value) => _choseAll(value),
+                        ),
                         const Text(
-                          "Tổng Cộng",
+                          "Chọn tất cả",
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 16,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
+                        const Spacer(),
                         Text(
-                          currentFormat.format(finalTotal),
+                          "Đã chọn: ${_selecteItem.length}",
                           style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
                             color: Color(0xFFE95322),
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-
-                    const SizedBox(height: 30),
-                    SizedBox(
-                      width: double.infinity,
-                      height: 55,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFFFC529),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(15),
+                  ),
+                  Expanded(
+                    child: _cartItem.isEmpty
+                        ? const Center(child: Text("Giỏ hàng trống"))
+                        : ListView.builder(
+                            padding: const EdgeInsets.all(20),
+                            itemCount: _cartItem.length,
+                            itemBuilder: (context, index) {
+                              final item = _cartItem[index];
+                              return Padding(
+                                padding: const EdgeInsets.only(bottom: 15),
+                                child: Row(
+                                  children: [
+                                    Checkbox(
+                                      value: _selecteItem.contains(item.cartId),
+                                      activeColor: const Color(0xFFE95322),
+                                      onChanged: (value) =>
+                                          _choseItem(item.cartId),
+                                    ),
+                                    Expanded(
+                                      child: CardProductCart(
+                                        item: item,
+                                        onIncrease: () => _updateItem(
+                                          index,
+                                          item.quantity + 1,
+                                          item.note ?? "",
+                                        ),
+                                        onDecrease: () {
+                                          if (item.quantity > 1) {
+                                            _updateItem(
+                                              index,
+                                              item.quantity - 1,
+                                              item.note ?? "",
+                                            );
+                                          }
+                                        },
+                                        onDelete: () => _deleteItem(index),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(0.3),
+                          blurRadius: 10,
+                          offset: const Offset(0, -5),
                         ),
-                        child: const Text(
-                          "Xác Nhận",
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Color(0xFFE95322), // Màu chữ
-                          ),
-                        ),
-                      ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                  ],
-                ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildSummaryRow("Tổng Phụ", _subTotal),
+                        const SizedBox(height: 10),
+                        _buildSummaryRow("Khuyến Mãi", 0, isDiscount: false),
+                        const Divider(),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            const Text(
+                              "Tổng Cộng",
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            Text(
+                              currentFormat.format(finalTotal),
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFE95322),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 20),
+                        SizedBox(
+                          width: double.infinity,
+                          height: 55,
+                          child: ElevatedButton(
+                            onPressed: _selecteItem.isEmpty
+                                ? null
+                                : () {
+                                    print(
+                                      "Thanh toán ${_selecteItem.length} món",
+                                    );
+                                  },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFFFC529),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(15),
+                              ),
+                            ),
+                            child: Text(
+                              "Đến thanh toán ${_selecteItem.length} món hàng",
+                              style: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFE95322),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
     );
