@@ -48,5 +48,8 @@ userRouter.delete('/carts/delete',auth,userController.removeCartItem);
 userRouter.post('/orders/checkout',auth,userController.checkout);
 
 //Address
-userRouter.get('/addresses', auth,userController.getAddressList)
+userRouter.get('/addresses', auth,userController.getAddressList);
+userRouter.post('/addresses/add', auth, userController.addAddress);
+userRouter.put('/addresses/setup', auth, userController.setDefaultAddress);
+userRouter.delete('/addresses/delete', auth, userController.deleteAddress);
 export default userRouter;

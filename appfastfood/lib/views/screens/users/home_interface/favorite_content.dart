@@ -1,7 +1,7 @@
 import 'package:appfastfood/views/screens/users/product_detail.dart';
 import 'package:appfastfood/views/widget/product_card.dart';
 import 'package:flutter/material.dart';
-import '../../../models/products.dart';
+import '../../../../models/products.dart';
 
 class FavoriteContent extends StatefulWidget{
   final List<Product>? favoriteProducts;
@@ -69,6 +69,7 @@ class _FavoriteContentState extends State<FavoriteContent> {
                         builder: (context) => ProductDetailScreen(product: product),
                       ),
                     );
+                    widget.onRefresh();
                   },
                   child: ProductCard(product: product),
                 );

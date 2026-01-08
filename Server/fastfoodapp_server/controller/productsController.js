@@ -57,8 +57,6 @@ class ProductController{
             const maxPriceNum = maxPrice ? parseFloat(maxPrice) : undefined;
             const ratingNum = rating ? parseInt(rating) : 0;
 
-            console.log("Filter Params:", { categoryId, minPriceNum, maxPriceNum, ratingNum });
-
             const products = await productsModel.filter({
                 categoryId,
                 minPrice: minPriceNum,
@@ -73,7 +71,6 @@ class ProductController{
                 data: products
             });
         } catch (error) {
-            console.error("Lỗi lọc sản phẩm:", error);
             return res.status(500).json({
                 success: false,
                 message: 'Error server when filtering'

@@ -4,7 +4,7 @@ import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/utils/app_colors.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
-import 'package:appfastfood/views/screens/users/address_list.dart';
+import 'package:appfastfood/views/screens/users/info/address/address_list.dart';
 import 'package:appfastfood/views/widget/auth_widgets.dart';
 import 'package:appfastfood/views/widget/topbar_page.dart';
 import 'package:flutter/material.dart';

@@ -1,13 +1,13 @@
-import 'package:appfastfood/views/screens/home_interface/favorite_content.dart';
-import 'package:appfastfood/views/screens/home_interface/home_content.dart';
+import 'package:appfastfood/views/screens/users/home_interface/favorite_content.dart';
+import 'package:appfastfood/views/screens/users/home_interface/home_content.dart';
 import 'package:appfastfood/views/screens/users/faq_screen.dart';
-import 'package:appfastfood/views/screens/users/promotion_screen.dart'; 
+import 'package:appfastfood/views/screens/users/home_interface/promotion_screen.dart';
 import 'package:flutter/material.dart';
-import '../../models/products.dart';
-import '../../service/api_service.dart';
-import '../widget/custom_top_bar.dart';
-import '../widget/custom_bottom_bar.dart';
-import '../widget/side_menu.dart';
+import '../../../models/products.dart';
+import '../../../service/api_service.dart';
+import '../../widget/custom_top_bar.dart';
+import '../../widget/custom_bottom_bar.dart';
+import '../../widget/side_menu.dart';
 import 'package:appfastfood/views/widget/filter_modal.dart'; // <--- MỚI THÊM (Import bảng lọc)
 
 class HomePageScreen extends StatefulWidget {
@@ -183,7 +183,7 @@ Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice
         return FavoriteContent(
           favoriteProducts: [],
           productsFuture: _favoriteFuture,
-          onRefresh: _loadFavData,
+          onRefresh: _refreshFavData,
         );
       case 3:
         return const Center(child: Text("Màn hình Lịch sử (Đang phát triển)"));
@@ -204,8 +204,7 @@ Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice
           // TOP BAR
           CustomTopBar(
             isHome:
-                _currentBottomIndex ==
-                0, // Chỉ hiện lời chào "Good Morning" ở trang Home
+                _currentBottomIndex == 0, // Chỉ hiện lời chào "Good Morning" ở trang Home
             searchController: _search,
             // --- MỚI THÊM (Gắn sự kiện bấm nút lọc) ---
             onFilterTap: _showFilterMenu,

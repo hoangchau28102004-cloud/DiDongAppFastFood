@@ -234,6 +234,102 @@ export default class userController {
             res.status(500).json({success: false, message: 'Lỗi server'});
         }
     }
+
+    // Thêm địa chỉ mới
+    static async addAddress(req, res) {
+        try {
+            const userId = req.userId;
+            const { name, street, district, city } = req.body;
+
+            if (!name || !street || !district || !city) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Vui lòng nhập đầy đủ thông tin: Tên, Đường, Quận, Thành phố"
+                });
+            }
+
+            await userModel.addAddresses({userId: userId, name: name, street: street, district: district, city: city});
+
+            return res.status(200).json({
+                success: true,
+                message: "Thêm địa chỉ mới thành công"
+            });
+
+        } catch (error) {
+            if (error.message.includes('đã tồn tại')) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Địa chỉ này đã tồn tại"
+                });
+            }
+
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi server khi thêm địa chỉ"
+            });
+        }
+    }
+
+    // Chỉnh chế độ địa chỉ
+    static async setDefaultAddress(req, res) {
+        try {
+            const userId = req.userId;
+            const { address_id } = req.body;
+
+            if (!address_id) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Thiếu address_id"
+                });
+            }
+
+            const isSuccess = await userModel.setDefaultAddress(userId, address_id);
+
+            if (isSuccess) {
+                return res.status(200).json({
+                    success: true,
+                    message: "Đã đặt địa chỉ mặc định"
+                });
+            } else {
+                return res.status(404).json({
+                    success: false,
+                    message: "Không tìm thấy địa chỉ hoặc địa chỉ không thuộc về bạn"
+                });
+            }
+
+        } catch (error) {
+            console.error("Lỗi set default address:", error);
+            return res.status(500).json({
+                success: false,
+                message: "Lỗi Server"
+            });
+        }
+    }
+
+    //Xóa địa chỉ
+    static async deleteAddress(req, res) {
+        try {
+            const userId = req.userId;
+            const { address_id } = req.body;
+
+            if (!address_id) {
+                return res.status(400).json({ success: false, message: "Thiếu address_id" });
+            }
+
+            await userModel.deleteAddresses(userId, address_id);
+
+            return res.status(200).json({
+                success: true,
+                message: "Xóa địa chỉ thành công"
+            });
+
+        } catch (error) {
+            return res.status(400).json({
+                success: false,
+                message: error.message 
+            });
+        }
+    }
     
     // Forget password
     static async forgetPassword(req, res) {
@@ -562,8 +658,8 @@ export default class userController {
             const addressData = await userModel.checkAddressById(userId);
             if(addressData  && addressData.length > 0){
             return res.status(200).json({
-            success: true,
-            data: addressData
+                success: true,
+                data: addressData
             });
         }
         return res.status(400).json({

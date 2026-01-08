@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:appfastfood/service/api_service.dart';
-import 'package:appfastfood/views/screens/users/forgot_pass_screen.dart';
-import 'package:appfastfood/views/screens/users/register_screen.dart';
+import 'package:appfastfood/views/screens/users/info/forgot_pass_screen.dart';
+import 'package:appfastfood/views/screens/users/info/register_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user.dart';
-import 'home_screen.dart';
+import 'users/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});

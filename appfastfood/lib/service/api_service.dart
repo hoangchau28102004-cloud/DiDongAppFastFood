@@ -13,7 +13,7 @@ class ApiService {
   static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
-  static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
+  static final String urlEdit = BaseUrl; //chỉnh url trên đây thôi
 
   // Đăng nhập
   Future<Map<String, dynamic>> login(String username, String password) async {
@@ -190,6 +190,103 @@ class ApiService {
       return [];
     } catch(e){
       return [];
+    }
+  }
+
+  // Thêm địa chỉ mới
+  Future<bool> addAddress(String name, String street, String district, String city) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/add');
+      
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'street': street,
+          'district': district,
+          'city': city,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        // Có thể in ra lỗi từ server để debug
+        final body = jsonDecode(response.body);
+        print("Lỗi thêm địa chỉ: ${body['message']}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi server addAddress: $e");
+      return false;
+    }
+  }
+
+  // Đặt địa chỉ mặc định
+  Future<bool> setDefaultAddress(int addressId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/setup');
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'address_id': addressId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print("Lỗi set default address: $e");
+      return false;
+    }
+  }
+
+  // Xóa địa chỉ
+  Future<bool> deleteAddress(int addressId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/delete');
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'address_id': addressId,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        final body = jsonDecode(response.body);
+        print("Lỗi xóa địa chỉ: ${body['message']}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi delete address: $e");
+      return false;
     }
   }
 
@@ -513,11 +610,6 @@ class ApiService {
     double? minPrice,
     double? maxPrice,
   }) async {
-    // Xây dựng URL với tham số (Query Parameters)
-    // Ví dụ: http://.../api/products/filter?categoryId=1&minPrice=10000...
-
-    // Lưu ý: Đường dẫn phải khớp với Router Backend (bạn dùng /api/products hay /products?)
-    // Dựa vào hàm getAllProducts của bạn thì mình đoán là /api/products/filter
     final uri = Uri.parse('$urlEdit/api/products/filter').replace(
       queryParameters: {
         if (categoryId != null && categoryId != "All") 'categoryId': categoryId,

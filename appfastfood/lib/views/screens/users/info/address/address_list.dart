@@ -1,5 +1,6 @@
 import 'package:appfastfood/models/address.dart';
 import 'package:appfastfood/service/api_service.dart';
+import 'package:appfastfood/views/screens/users/info/address/new_address.dart';
 import 'package:appfastfood/views/widget/topbar_page.dart';
 import 'package:flutter/material.dart';
 
@@ -13,7 +14,7 @@ class AddressList extends StatefulWidget {
 class _AddressListState extends State<AddressList> {
   List<Address> _addressList = [];
   bool _isLoading = true;
-  int _selectedIndex = 0; // Mặc định chọn phần tử đầu tiên
+  int _selectedIndex = -1;
 
   @override
   void initState() {
@@ -25,19 +26,49 @@ class _AddressListState extends State<AddressList> {
     try {
       // Gọi API lấy danh sách địa chỉ từ backend
       List<Address> data = await ApiService().getAddress();
-      setState(() {
-        _addressList = data;
-        _isLoading = false;
-        
-        // (Tùy chọn) Tìm địa chỉ mặc định để set selectedIndex
-        // int defaultIndex = data.indexWhere((element) => element.isDefault == true);
-        // if (defaultIndex != -1) _selectedIndex = defaultIndex;
-      });
+      if (mounted) {
+        setState(() {
+          _addressList = data;
+          _isLoading = false;
+          
+          int defaultIndex = data.indexWhere((element) => element.isDefault == true);
+          if (defaultIndex != -1) {
+            _selectedIndex = defaultIndex;
+          } else if (data.isNotEmpty) {
+            _selectedIndex = 0;
+          }
+        });
+      }
     } catch (e) {
       print("Lỗi tải danh sách địa chỉ: $e");
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  // Hàm chọn địa chỉ mặc định
+  Future<void> _onSelectAddress(int index, int addressId) async {
+    if (_selectedIndex == index) return;
+
+    bool success = await ApiService().setDefaultAddress(addressId);
+
+    if (mounted) {
+      if (success) {
+        setState(() {
+          _selectedIndex = index;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Đã đổi địa chỉ giao hàng mặc định"),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Lỗi kết nối, vui lòng thử lại")),
+        );
+      }
     }
   }
 
@@ -76,17 +107,13 @@ class _AddressListState extends State<AddressList> {
                           final addressItem = _addressList[index];
                           
                           return InkWell(
-                            onTap: () {
-                              setState(() {
-                                _selectedIndex = index;
-                              });
-                            },
+                            onTap: () => _onSelectAddress(index, addressItem.addressId),
                             child: Padding(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  // 1. Icon Ngôi nhà
+                                  // Icon Ngôi nhà
                                   Padding(
                                     padding: const EdgeInsets.only(top: 2),
                                     child: Icon(
@@ -97,14 +124,16 @@ class _AddressListState extends State<AddressList> {
                                   ),
                                   const SizedBox(width: 15),
                                   
-                                  // 2. Nội dung text (Title + Address)
+                                  // Nội dung text (Title + Address)
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // Hiển thị 'addressType' (Ví dụ: My home, Office)
+                                        // Hiển thị 'addressType'
                                         Text(
-                                          addressItem.name, 
+                                          addressItem.name,
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                           style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -112,9 +141,12 @@ class _AddressListState extends State<AddressList> {
                                           ),
                                         ),
                                         const SizedBox(height: 5),
-                                        // Hiển thị 'address' (Địa chỉ cụ thể)
+                                        // Hiển thị 'address'
                                         Text(
-                                          addressItem.streetAddress+addressItem.district+addressItem.city, 
+                                          "${addressItem.streetAddress}, ${addressItem.district}, ${addressItem.city}",
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          softWrap: false,
                                           style: TextStyle(
                                             fontSize: 14,
                                             color: Colors.grey[600],
@@ -127,19 +159,50 @@ class _AddressListState extends State<AddressList> {
                                   
                                   // 3. Nút Radio tròn đồng tâm
                                   Transform.scale(
-                                    scale: 1.2, // Phóng to radio một chút cho giống hình
+                                    scale: 1.2,
                                     child: Radio<int>(
                                       value: index,
                                       groupValue: _selectedIndex,
                                       activeColor: primaryOrange,
                                       materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                       onChanged: (value) {
-                                        setState(() {
-                                          _selectedIndex = value!;
-                                        });
+                                        if (value != null) {
+                                          _onSelectAddress(value, addressItem.addressId);
+                                        }
                                       },
                                     ),
                                   ),
+                                  IconButton(
+                                    icon: Icon(Icons.delete, color: Colors.red),
+                                    onPressed: () async {
+                                      // Gọi API
+                                      bool success = await ApiService().deleteAddress(addressItem.addressId);
+                                      
+                                      // Kiểm tra màn hình còn hiển thị không
+                                      if (context.mounted) {
+                                        if (success) {
+                                          setState(() {
+                                            _addressList.removeAt(index);
+
+                                            if (_selectedIndex == index) {
+                                              _selectedIndex = 0; 
+                                            }
+                                            else if(_selectedIndex > index){
+                                              _selectedIndex--;
+                                            }
+                                          });
+
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Đã xóa địa chỉ thành công")),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text("Lỗi khi xóa địa chỉ")),
+                                          );
+                                        }
+                                      }
+                                    },
+                                  )
                                 ],
                               ),
                             ),
@@ -155,9 +218,14 @@ class _AddressListState extends State<AddressList> {
               width: 220,
               height: 50,
               child: ElevatedButton(
-                onPressed: () {
-                  // TODO: Navigate sang màn hình thêm địa chỉ
-                  print("Bấm thêm địa chỉ");
+                onPressed: () async {
+                  final result = await Navigator.push(
+                    context, 
+                    MaterialPageRoute(builder: (context) => const NewAddress())
+                  );
+                  if (result == true) {
+                    _loadAddresslist(); 
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: lightPinkButton, // Màu nền hồng nhạt

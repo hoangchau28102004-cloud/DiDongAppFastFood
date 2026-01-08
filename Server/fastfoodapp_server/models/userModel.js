@@ -125,6 +125,100 @@ export default class userModel {
         }
     }
 
+    // Thêm địa chỉ mới
+    static async addAddresses({ userId, name, street, district, city }) {
+        // 1. Bắt đầu Transaction
+        let connection = await beginTransaction();
+        try {
+            // 2. Kiểm tra xem địa chỉ này đã tồn tại trong database chưa
+            const checkSql = `SELECT address_id, status FROM Addresses WHERE user_id = ? 
+                AND street_address = ? AND district = ? AND city = ? LIMIT 1`;
+            
+            const [rows] = await connection.execute(checkSql, [userId, street, district, city]);
+
+            if (rows.length > 0) {
+                const existingAddress = rows[0];
+
+                if (existingAddress.status == 1) {
+                    // a. Nếu status đang là 1 (Active) -> Báo lỗi trùng
+                    throw new Error('Địa chỉ này đã tồn tại trong danh sách của bạn!');
+                } else {
+                    // b. Nếu status đang là 0 (Đã xóa/Ẩn) -> Khôi phục lại
+                    await connection.execute(
+                        `UPDATE Addresses SET status = 1, recipient_name = ? 
+                         WHERE address_id = ?`,
+                        [name, existingAddress.address_id]);
+                }
+            } else {
+                await connection.execute(
+                    `INSERT INTO Addresses(user_id, recipient_name, street_address, district, city, is_default, status) 
+                     VALUES (?, ?, ?, ?, ?, 0, 1)`,
+                    [userId, name, street, district, city]
+                );
+            }
+
+            // 3. Commit thay đổi
+            await commitTransaction(connection);
+            return true;
+
+        } catch (e) {
+            if (connection) await rollbackTransaction(connection);
+            throw new Error(e.message);
+        }
+    }
+
+    // Chỉnh chế độ địa chỉ
+    static async setDefaultAddress(userId, addressId) {
+        // 1. Bắt đầu Transaction
+        let connection = await beginTransaction();
+        try {
+            // 2. Reset tất cả địa chỉ của User này về 0
+            await connection.execute(`UPDATE Addresses SET is_default = 0 WHERE user_id = ?`, [userId]);
+
+            // 3. Set địa chỉ được chọn thành 1
+            const [result] = await connection.execute(
+                `UPDATE Addresses SET is_default = 1 WHERE address_id = ? AND user_id = ?`,
+                [addressId, userId]
+            );
+
+            // Kiểm tra xem có dòng nào được update không
+            if (result.affectedRows === 0) {
+                await rollbackTransaction(connection);
+                return false; 
+            }
+
+            // 4. Commit thay đổi
+            await commitTransaction(connection);
+            return true;
+
+        } catch (error) {
+            if (connection) await rollbackTransaction(connection);
+            throw new Error(error.message);
+        }
+    }
+
+    // Xóa địa chỉ
+    static async deleteAddresses(userId, addressId){
+        let connection = await beginTransaction();
+        try{
+            const [result] = await connection.execute(
+                `UPDATE Addresses SET status = 0 WHERE address_id = ? AND user_id = ?`,
+                [addressId, userId] 
+            );
+
+            if (result.affectedRows === 0) {
+                await rollbackTransaction(connection);
+                throw new Error("Không tìm thấy địa chỉ hoặc bạn không có quyền xóa");
+            }
+
+            await commitTransaction(connection);
+            return true;
+        }catch(e){
+            if(connection) await rollbackTransaction(connection);
+            throw new Error(e.message);
+        }
+    }
+
     // Thêm sản phẩm yêu thích
     static async addFavorites(userId,productId){
         try{
@@ -389,7 +483,7 @@ export default class userModel {
 
     static async checkAddressById(userId){
         try {
-            console.log("Đang check User ID:", userId); // <--- Thêm dòng này
+            console.log("Đang check User ID:", userId);
             const [rows] = await execute(`
                 SELECT * FROM Addresses where user_id = ?`,[userId]);
             console.log("Kết quả tìm thấy:", rows);
