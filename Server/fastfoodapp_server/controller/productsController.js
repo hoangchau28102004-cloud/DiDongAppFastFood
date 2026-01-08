@@ -46,6 +46,40 @@ class ProductController{
             });
         }
     }
+
+    static async filterProducts(req, res) {
+        try {
+            let { categoryId, minPrice, maxPrice, rating, keyword } = req.query;
+
+            // 1. ÉP KIỂU DỮ LIỆU (QUAN TRỌNG)
+            // Chuyển chuỗi "150000" thành số 150000 để SQL so sánh đúng
+            const minPriceNum = minPrice ? parseFloat(minPrice) : 0;
+            const maxPriceNum = maxPrice ? parseFloat(maxPrice) : undefined;
+            const ratingNum = rating ? parseInt(rating) : 0;
+
+            console.log("Filter Params:", { categoryId, minPriceNum, maxPriceNum, ratingNum });
+
+            const products = await productsModel.filter({
+                categoryId,
+                minPrice: minPriceNum,
+                maxPrice: maxPriceNum,
+                rating: ratingNum,
+                keyword
+            });
+
+            return res.status(200).json({
+                success: true,
+                message: 'Filter success',
+                data: products
+            });
+        } catch (error) {
+            console.error("Lỗi lọc sản phẩm:", error);
+            return res.status(500).json({
+                success: false,
+                message: 'Error server when filtering'
+            });
+        }
+    }
 }
 
 export default ProductController;

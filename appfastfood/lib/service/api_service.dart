@@ -9,7 +9,7 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.30.165:8001'; //máy thật
+  static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
@@ -474,6 +474,44 @@ class ApiService {
     } catch (e) {
       print('Lỗi không tìm thấy địa chỉ');
       return false;
+      // Lọc sản phẩm
+    }
+  }
+
+  Future<List<Product>> filterProducts({
+    String? categoryId,
+    int? rating,
+    double? minPrice,
+    double? maxPrice,
+  }) async {
+    // Xây dựng URL với tham số (Query Parameters)
+    // Ví dụ: http://.../api/products/filter?categoryId=1&minPrice=10000...
+
+    // Lưu ý: Đường dẫn phải khớp với Router Backend (bạn dùng /api/products hay /products?)
+    // Dựa vào hàm getAllProducts của bạn thì mình đoán là /api/products/filter
+    final uri = Uri.parse('$urlEdit/api/products/filter').replace(
+      queryParameters: {
+        if (categoryId != null && categoryId != "All") 'categoryId': categoryId,
+        if (rating != null && rating > 0) 'rating': rating.toString(),
+        if (minPrice != null) 'minPrice': minPrice.toString(),
+        if (maxPrice != null) 'maxPrice': maxPrice.toString(),
+      },
+    );
+
+    try {
+      final response = await http.get(uri);
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        if (jsonResponse['success'] == true) {
+          final List<dynamic> data = jsonResponse['data'];
+          return data.map((item) => Product.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch (e) {
+      print("Lỗi filterProducts: $e");
+      return [];
     }
   }
 }

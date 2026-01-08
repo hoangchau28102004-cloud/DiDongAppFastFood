@@ -8,6 +8,7 @@ import '../../service/api_service.dart';
 import '../widget/custom_top_bar.dart';
 import '../widget/custom_bottom_bar.dart';
 import '../widget/side_menu.dart';
+import 'package:appfastfood/views/widget/filter_modal.dart'; // <--- MỚI THÊM (Import bảng lọc)
 
 class HomePageScreen extends StatefulWidget {
   const HomePageScreen({super.key});
@@ -28,6 +29,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
   List<String> _categories = ["All"];
   String _selectedCategory = "All";
   int _currentBottomIndex = 0;
+
+  List<CategoryItem> _filterCategories = []; // <--- MỚI THÊM (Biến chứa danh mục cho bộ lọc)
 
   @override
   void initState() {
@@ -57,10 +60,62 @@ class _HomePageScreenState extends State<HomePageScreen> {
         final categories = products.map((p) => p.categoryName).toSet().toList();
         _categories = ["All", ...categories];
         _selectedCategory = "All";
+
+        // --- MỚI THÊM (Lấy dữ liệu cho bảng lọc) ---
+        final uniqueCats = <int, String>{};
+        for (var p in products) {
+           uniqueCats[p.categoryId] = p.categoryName; 
+        }
+        _filterCategories = uniqueCats.entries
+           .map((e) => CategoryItem(id: e.key.toString(), name: e.value))
+           .toList();
+        // ------------------------------------------
       });
     }
     return products;
   }
+
+  // --- MỚI THÊM (Hàm hiển thị menu lọc) ---
+ void _showFilterMenu() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return Padding(
+           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+           child: FilterModal(
+            categories: _filterCategories,
+            // Callback bây giờ nhận về maxPrice (double) thay vì RangeValues
+            onApply: (catId, rating, maxPrice) {
+               _applyAdvancedFilter(catId, rating, maxPrice);
+            },
+          ),
+        );
+      },
+    );
+  }
+  // ----------------------------------------
+
+  // --- MỚI THÊM (Hàm gọi API lọc) ---
+Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice) async {
+      setState(() {}); 
+      try {
+        final result = await _apiService.filterProducts(
+          categoryId: categoryId,
+          rating: rating,
+          minPrice: 0, // <--- LUÔN SET MIN LÀ 0
+          maxPrice: maxPrice, // <--- SET MAX THEO THANH KÉO
+        );
+        setState(() {
+          _homeDisplayProducts = result;
+          _productsFuture = Future.value(result); 
+        });
+      } catch (e) {
+        print("Lỗi Filter: $e");
+      }
+  }
+  // ----------------------------------
 
   // Hàm refresh cho Home
   Future<List<Product>> _refreshHome() async {
@@ -152,6 +207,9 @@ class _HomePageScreenState extends State<HomePageScreen> {
                 _currentBottomIndex ==
                 0, // Chỉ hiện lời chào "Good Morning" ở trang Home
             searchController: _search,
+            // --- MỚI THÊM (Gắn sự kiện bấm nút lọc) ---
+            onFilterTap: _showFilterMenu,
+            // ------------------------------------------
           ),
 
           //NỘI DUNG THAY ĐỔI

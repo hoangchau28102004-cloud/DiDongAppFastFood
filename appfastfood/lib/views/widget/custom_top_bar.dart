@@ -5,11 +5,13 @@ class CustomTopBar extends StatelessWidget {
   final bool isHome;
   final TextEditingController? searchController;
   final Function(String)? onSearchChanged;
+  final VoidCallback? onFilterTap;
   const CustomTopBar({
     super.key,
     this.isHome = false, // Mặc định là false
     this.searchController,
     this.onSearchChanged,
+    this.onFilterTap,
   });
 
   @override
@@ -49,16 +51,19 @@ class CustomTopBar extends StatelessWidget {
                               ),
                             ),
                           ),
-                          Container(
-                            padding: const EdgeInsets.all(5),
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFE95322),
-                            ),
-                            child: const Icon(
-                              Icons.tune,
-                              color: Colors.white,
-                              size: 16,
+                          GestureDetector(
+                            onTap: onFilterTap, // Gọi hàm khi ấn
+                            child: Container(
+                              padding: const EdgeInsets.all(5),
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE95322),
+                              ),
+                              child: const Icon(
+                                Icons.tune,
+                                color: Colors.white,
+                                size: 16,
+                              ),
                             ),
                           ),
                         ],
