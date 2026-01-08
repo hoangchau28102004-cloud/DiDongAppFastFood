@@ -1,6 +1,9 @@
 import 'package:appfastfood/models/promotion.dart';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart'; 
+import '../../../../models/promotion.dart';
+import '../../../../service/api_service.dart';
 
 class PromotionScreen extends StatefulWidget {
   const PromotionScreen({super.key});

@@ -1,8 +1,8 @@
 import 'dart:convert';
-import 'package:appfastfood/views/screens/home_screen.dart';
-import 'package:appfastfood/views/screens/users/profile_screen.dart';
+import 'package:appfastfood/views/screens/users/home_screen.dart';
+import 'package:appfastfood/views/screens/users/info/profile_screen.dart';
 import 'package:appfastfood/views/screens/welcome_screen.dart';
-import 'package:appfastfood/views/screens/users/support_screen.dart';
+import 'package:appfastfood/views/screens/users/home_interface/support_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../models/user.dart';
