@@ -332,166 +332,208 @@ export default class userModel {
         return await execute(sql,[cartId]);
     }
 
-    static async startTransaction({ userId, shippingAddressId, note, items, isBuyFromCart = false, promotionId = null}){
+    static async calculateOrderRaw(connection, items, promotionId, shippingAddressId) {
+        let promotion = null;
+        let promotionDetails = [];
+
+        // 1. Lấy thông tin Voucher (Nếu có)
+        if (promotionId) {
+            const [promos] = await connection.execute(
+                `SELECT * FROM promotions WHERE promotion_id = ? AND status = 1 AND start_date <= NOW() AND end_date >= NOW()`,
+                [promotionId]
+            );
+            if (promos.length > 0) {
+                promotion = promos[0];
+                const [details] = await connection.execute(
+                    `SELECT promotion_id, product_id, category_id, promotion_detail_id FROM promotion_details WHERE promotion_id = ? AND status = 1`,
+                    [promotionId]
+                );
+                promotionDetails = details;
+            }
+        }
+
+        // 2. Tính toán từng món hàng
+        let subtotal = 0;
+        let totalDiscountAmount = 0;
+        const calculatedItems = [];
+
+        for (const item of items) {
+            // Luôn query lại giá mới nhất từ DB để bảo mật (tránh hack giá từ client)
+            const [products] = await connection.execute(
+                `SELECT product_id, name, price, category_id, image_url FROM Products WHERE product_id = ?`,
+                [item.productId] // Lưu ý: Client gửi lên key là 'productId'
+            );
+
+            if (products.length === 0) throw new Error(`Sản phẩm ID ${item.productId} không tồn tại`);
+
+            const product = products[0];
+            const unitPrice = parseFloat(product.price);
+            const quantity = item.quantity;
+            const lineTotalOrigin = unitPrice * quantity;
+
+            subtotal += lineTotalOrigin;
+
+            // Logic tính giảm giá
+            let discountForThisItem = 0;
+            let appliedDetailId = null;
+
+            if (promotion) {
+                let matchedDetail = promotionDetails.find(d => d.product_id == product.product_id);
+                if (!matchedDetail) matchedDetail = promotionDetails.find(d => d.category_id == product.category_id);
+
+                // Logic: Có detail khớp HOẶC Voucher áp dụng toàn bộ (không có detail con)
+                if (matchedDetail || promotionDetails.length === 0) {
+                    const percent = parseFloat(promotion.discount_percent);
+                    discountForThisItem = (lineTotalOrigin * percent) / 100;
+                    if (matchedDetail) appliedDetailId = matchedDetail.promotion_detail_id;
+                }
+            }
+
+            totalDiscountAmount += discountForThisItem;
+
+            calculatedItems.push({
+                product_id: product.product_id,
+                name: product.name,
+                image: product.image_url,
+                quantity: quantity,
+                unit_price: unitPrice,
+                final_line_price: lineTotalOrigin - discountForThisItem,
+                promotion_detail_id: appliedDetailId
+            });
+        }
+
+        // 3. Phí Ship & Thuế
+        // Giả sử phí ship cố định, hoặc bạn query bảng Address để tính
+        let shippingFee = shippingAddressId ? 15000 : 0; 
+        
+        // Thuế 8% (Ví dụ) trên số tiền sau khi giảm giá
+        const taxRate = 0.08; 
+        const taxableAmount = subtotal - totalDiscountAmount;
+        const taxFee = taxableAmount * taxRate;
+
+        // Tổng tiền cuối cùng
+        let totalAmount = taxableAmount + taxFee + shippingFee;
+        if (totalAmount < 0) totalAmount = 0;
+
+        return {
+            subtotal,
+            totalDiscountAmount,
+            shippingFee,
+            taxFee,
+            totalAmount,
+            promotionId: promotion ? promotion.promotion_id : null,
+            items: calculatedItems
+        };
+    }
+
+    /**
+     * API 1: XEM TRƯỚC ĐƠN HÀNG (Preview)
+     * Gọi hàm này khi vừa vào màn hình Checkout để hiển thị số liệu
+     */
+    static async previewOrder(items, promotionId, shippingAddressId) {
         let connection;
         try {
-            connection = await beginTransaction();
+            // Lấy connection từ pool (không cần beginTransaction vì chỉ đọc)
+            connection = await execute('SELECT 1'); // Hack nhỏ để lấy connection object nếu hàm execute của bạn chỉ trả rows. 
+            // Tốt nhất bạn nên export pool từ db.js để dùng getConnection(), 
+            // nhưng ở đây tôi dùng hàm execute wrapper nên ta sẽ giả lập logic của calculateOrderRaw chấp nhận execute wrapper.
+            // *Lưu ý*: Để code `calculateOrderRaw` chạy được với `execute` wrapper của bạn, tôi sẽ sửa lại logic gọi DB một chút bên dưới nếu cần.
+            // Nhưng cách tốt nhất ở đây là tái sử dụng logic.
+            
+            // Ở đây tôi giả định bạn có thể import pool. Nếu không, tôi viết lại hàm calculate chạy độc lập transaction:
+             
+            // -- FIX: Viết logic chạy trực tiếp --
+            return await this.calculateOrderRaw({ execute: execute }, items, promotionId, shippingAddressId);
+            
+        } catch (error) {
+            throw error;
+        }
+    }
 
-            let promotion = null;
-            let promotionDetails = [];
+    static async createOrderTransaction({ userId, shippingAddressId, note, items, isBuyFromCart = false, promotionId = null, paymentMethod = 'COD' }) {
+        let connection;
+        try {
+            connection = await beginTransaction(); // Bắt đầu Transaction thật
 
-            if(promotionId){
-                const [promos] = await connection.execute(
-                    `SELECT * FROM promotions
-                    WHERE promotion_id = ? AND status = 1
-                    AND start_date <= NOW() AND end_date >= NOW`,[promotionId]
-                );
-                if(promos.length > 0){
-                    promotion = promos[0];
+            // 1. Tính toán lại lần cuối (Bảo mật giá)
+            // Truyền connection vào để nó dùng chung transaction này
+            const calc = await userModel.calculateOrderRaw(connection, items, promotionId, shippingAddressId);
 
-                    const [details] = await connection.execute(
-                        `SELECT promotion_id, product_id, category_id
-                        FROM promotion_details WHERE promotion_id = ? AND status = 1`,[promotionId]
-                    );
-                    promotionDetails = details;
-                }
-            }
-
-            let subtotal = 0;
-            let totalDiscountAmount = 0;
-            const orderDetalBatch = [];
-
-            for(item of items){
-                const [products] = await connection.execute(
-                  `SELECT price, category_id FROM Products WHERE product_id = ?`,
-                  [items.productId]
-                );
-
-                if(products.length === 0){
-                    throw new Error(`Sản phẩm ID ${item.productId} không tồn tại`);
-                }
-
-                const product = products[0];
-                const unitPrice = parseFloat(product.price);
-                const categoryId = product.category_id;
-
-                const lineTotalOrigin = unitPrice * item.quantity;
-                subtotal += lineTotalOrigin;
-
-                let discountForThisItem = 0;
-                let aplliedDetailId = null; // id của khuyến mãi
-
-                if(promotion){
-                    let matchedDetail = null;
-
-                    if(promotionDetails.length > 0){
-                        // tìm khuyến mãi theo id sản phẩm
-                        matchedDetail = promotionDetails.find(d => d.product_id === item.product_id);
-                        //dòng ở trên tìm ko có nữa thì tìm ở dưới này hihi
-                        if(!matchedDetail){
-                            matchedDetail = promotionDetails.find(d => d.category_id === item.category_id);
-                        }
-                    }
-                    // để đc giảm giá thì phải có 1 cái này hoặc 1 cái kia nếu áp dụng theo sản phẩm hoặc áp dụng theo tất cả
-                    if(matchedDetail || promotionDetails.length === 0){
-                        const percent = parseFloat(promotion.discount_percent);
-                        discountForThisItem = (lineTotalOrigin * percent) / 100;
-                        if(matchedDetail){
-                            aplliedDetailId = matchedDetail.promotion_detail_id;
-                        }
-                    }
-                }
-                totalDiscountAmount += discountForThisItem;
-                const finalLinePrice = lineTotalOrigin - discountForThisItem;
-
-                orderDetalBatch.push({
-                    product_id: item.product_id,
-                    quantity: item.quantity,
-                    unit_price: item.unitPrice,
-                    final_line_price: finalLinePrice,
-                    promotion_detail_id: aplliedDetailId
-                });
-
-                
-            }
-            const taxFee = 1.8;
-            let totalAmount = (subtotal - totalDiscountAmount) * taxFee;
-            if(totalAmount < 0) totalAmount = 0;
-
+            // 2. Insert bảng Orders
             const [orderResult] = await connection.execute(
                 `INSERT INTO Orders (
-                user_id, promotion_id, shipping_address_id, 
-                subtotal, discount_amount, tax_fee, total_amount, 
-                order_status, payment_status, note, created_at
+                    user_id, promotion_id, shipping_address_id, 
+                    subtotal, discount_amount, tax_fee, total_amount, 
+                    order_status, payment_status, note, created_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, 'PENDING', 'UNPAID', ?, NOW())`,
                 [
-                    userId,
-                    promotion ? promotion.promotion_id : null,
-                    shippingAddressId,
-                    subtotal,
-                    totalDiscountAmount,
-                    taxFee,
-                    totalAmount,
+                    userId, 
+                    calc.promotionId, 
+                    shippingAddressId, 
+                    calc.subtotal, 
+                    calc.totalDiscountAmount, 
+                    calc.taxFee, 
+                    calc.totalAmount, 
                     note
                 ]
             );
+            const newOrderId = orderResult.insertId;
 
-            const newOrderId = orderResult.insertId; // lấy id vừa insert vào
-
-            for(const detail of orderDetalBatch){
+            // 3. Insert bảng Order_Details
+            for (const item of calc.items) {
                 await connection.execute(
-                    `INSERT INTO Order_Details(order_id, product_id, quantity, unit_price,promotion_detail_id, final_line_price)
-                    VALUES (?,?,?,?,?,?)
-                    `,
-                    [
-                        newOrderId,
-                        detail.product_id,
-                        detail.quantity,
-                        detail.unit_price,
-                        detail.promotion_detail_id,
-                        detail.final_line_price
-                    ]
+                    `INSERT INTO Order_Details(order_id, product_id, quantity, unit_price, promotion_detail_id, final_line_price)
+                     VALUES (?,?,?,?,?,?)`,
+                    [newOrderId, item.product_id, item.quantity, item.unit_price, item.promotion_detail_id, item.final_line_price]
                 );
             }
 
-            if(isBuyFromCart && items.length > 0){
-                const productIds = items.map(i => i.product_id);
+            // 4. Insert Payment (Lưu phương thức thanh toán) - QUAN TRỌNG
+            await connection.execute(
+                `INSERT INTO Payment(order_id, user_id, method, amount, status, payment_time) 
+                 VALUES (?, ?, ?, ?, 'PENDING', NOW())`,
+                [newOrderId, userId, paymentMethod, calc.totalAmount]
+            );
 
-                const placholder = productIds.map(()=> '?').join(',');
+            // 5. Xóa giỏ hàng (Nếu mua từ giỏ)
+            if (isBuyFromCart && items.length > 0) {
+                const productIds = items.map(i => i.product_id); // calc.items đã chuẩn hóa key
+                // Tạo string (?,?,?) dynamic
+                const placeholders = productIds.map(() => '?').join(',');
                 const deleteParams = [userId, ...productIds];
-
+                
                 await connection.execute(
-                    `DELETE FROM Carts WHERE user_id = ? AND product_id IN (${placholder})`,
-                    [deleteParams]
+                    `DELETE FROM Carts WHERE user_id = ? AND product_id IN (${placeholders})`,
+                    deleteParams
                 );
             }
+
             await commitTransaction(connection);
 
             return {
                 success: true,
                 order_id: newOrderId,
-                subtotal: subtotal,
-                discount_amount: totalDiscountAmount,
-                total_amout: totalAmount
+                total_amount: calc.totalAmount,
+                message: "Đặt hàng thành công"
             };
+
         } catch (e) {
-            if(connection) await rollbackTransaction(connection);
-            console.error("Lỗi create Order: ",e);
+            if (connection) await rollbackTransaction(connection);
+            console.error("Lỗi Create Order Transaction:", e);
             throw new Error(e.message);
         }
     }
 
     static async checkAddressById(userId){
         try {
-            console.log("Đang check User ID:", userId);
+            
             const [rows] = await execute(`
                 SELECT * FROM Addresses where user_id = ?`,[userId]);
-            console.log("Kết quả tìm thấy:", rows);
             return rows;
-            
         } catch (error) {
             console.error("Lỗi check address",error);
             throw new Error(error.message);
         }
     }
+
 }

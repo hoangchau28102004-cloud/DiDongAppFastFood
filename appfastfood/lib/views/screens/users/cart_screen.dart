@@ -1,5 +1,7 @@
 import 'package:appfastfood/models/cartItem.dart';
+import 'package:appfastfood/models/checkout.dart';
 import 'package:appfastfood/service/api_service.dart';
+import 'package:appfastfood/views/screens/users/checkout_screen.dart';
 import 'package:appfastfood/views/widget/product_card_cart.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
@@ -18,8 +20,6 @@ class _CartScreenState extends State<CartScreen> {
   final currentFormat = NumberFormat.currency(locale: 'vi_VN', symbol: 'đ');
 
   final Set<int> _selecteItem = {};
-
-  bool isAddress = false;
 
   @override
   void initState() {
@@ -49,25 +49,47 @@ class _CartScreenState extends State<CartScreen> {
     }
   }
 
-  Future<void> _checkAddress() async {
-    final success = await ApiService().checkAddressbyId();
-    if (success && mounted) {
-      setState(() {
-        isAddress = true;
-      });
+  Future<void> _processCheckout() async {
+    // 1. Kiểm tra xem có chọn món nào chưa
+    if (_selecteItem.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Bạn hãy đợi tui code tiếp nhé chưa mua đc đâu'),
+          content: Text('Vui lòng chọn ít nhất 1 món để thanh toán'),
         ),
       );
-    } else {
-      setState(() {
-        isAddress = false;
-      });
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Địa chỉ của ní đâu ní')));
+      return;
     }
+
+    // 2. Lọc ra các món đã tích chọn (Checkbox)
+    final selectedCartItems = _cartItem
+        .where((item) => _selecteItem.contains(item.cartId))
+        .toList();
+
+    // 3. Chuyển đổi từ CartItem (model giỏ hàng) sang OrderItemReq (model gửi lên API đặt hàng)
+    // Lưu ý: Đảm bảo class OrderItemReq có constructor nhận productId, quantity, note
+    List<OrderItemReq> itemsToCheckout = selectedCartItems.map((item) {
+      return OrderItemReq(
+        productId: item.productId,
+        quantity: item.quantity,
+        note: item.note ?? "", // Nếu note null thì để rỗng
+      );
+    }).toList();
+
+    // 4. Chuyển sang màn hình Checkout
+    // Dùng await Navigator.push để khi user quay lại (back), ta load lại giỏ hàng
+    await Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          inputItems: itemsToCheckout, // Truyền danh sách món
+          isBuyFromCart:
+              true, // Đánh dấu là mua từ giỏ (để server biết đường xóa giỏ hàng sau khi mua)
+        ),
+      ),
+    );
+
+    // 5. Sau khi quay lại từ trang Checkout (dù mua thành công hay chưa), load lại giỏ hàng
+    _fetchData();
   }
 
   double _calculateTotal() {
@@ -319,7 +341,7 @@ class _CartScreenState extends State<CartScreen> {
                             onPressed: _selecteItem.isEmpty
                                 ? null
                                 : () {
-                                    _checkAddress();
+                                    _processCheckout();
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFC529),

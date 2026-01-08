@@ -1,6 +1,9 @@
+import 'package:appfastfood/models/cartItem.dart';
+import 'package:appfastfood/models/checkout.dart';
 import 'package:appfastfood/models/products.dart';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
+import 'package:appfastfood/views/screens/users/checkout_screen.dart';
 import 'package:flutter/material.dart';
 
 class ProductDetailScreen extends StatefulWidget {
@@ -31,6 +34,38 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
     super.initState();
     _checkFav();
     _fechFullProductData();
+  }
+
+  void _processBuyNow() {
+    if (!_isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Vui lòng đăng nhập để mua hàng")),
+      );
+      return;
+    }
+
+    // 1. Tạo đối tượng CartItem từ sản phẩm hiện tại
+    // Lưu ý: Đảm bảo các trường khớp với CartItem model của bạn
+    final itemToBuy = OrderItemReq(
+      productId: widget.product.id, // hoặc id
+      // name: widget.product.name,
+      // imageUrl: widget.product.imageUrl,
+      // price: widget.product.price,
+      quantity: _quantity,
+      // cartId: 0, // ID giả vì chưa vào DB giỏ hàng
+      note: "", // Nếu model có trường note
+    );
+
+    // 2. Chuyển sang màn hình Checkout
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CheckoutScreen(
+          inputItems: [itemToBuy], // Truyền dưới dạng List
+          isBuyFromCart: false, // Đánh dấu là mua ngay (không phải từ giỏ)
+        ),
+      ),
+    );
   }
 
   void _fechFullProductData() async {
@@ -540,19 +575,20 @@ class _ProductDetailScreenState extends State<ProductDetailScreen> {
               Expanded(
                 child: ElevatedButton(
                   onPressed: () {
-                    if (_isLoggedIn) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Mua thành công sản phẩm"),
-                        ),
-                      );
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text("Vui lòng đăng nhập tài khoản"),
-                        ),
-                      );
-                    }
+                    // if (_isLoggedIn) {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //     const SnackBar(
+                    //       content: Text("Mua thành công sản phẩm"),
+                    //     ),
+                    //   );
+                    // } else {
+                    //   ScaffoldMessenger.of(context).showSnackBar(
+                    //     const SnackBar(
+                    //       content: Text("Vui lòng đăng nhập tài khoản"),
+                    //     ),
+                    //   );
+                    // }
+                    _processBuyNow();
                   },
                   style: ElevatedButton.styleFrom(
                     padding: EdgeInsets.all(10),

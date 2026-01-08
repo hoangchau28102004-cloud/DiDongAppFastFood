@@ -7,10 +7,11 @@ import 'package:appfastfood/utils/storage_helper.dart';
 import 'package:http_parser/http_parser.dart';
 import 'package:http/http.dart' as http;
 import '../models/products.dart';
+import '../models/checkout.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://127.0.0.1:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.100.248:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
@@ -161,131 +162,6 @@ class ApiService {
       return false;
     } catch (e) {
       print('Lỗi updateProfile: $e');
-      return false;
-    }
-  }
-
-  // Lấy tất cả địa chỉ
-  Future<List<Address>> getAddress() async{
-    try{
-      final token = await StorageHelper.getToken();
-      if(token  == null) return [];
-
-
-      final res = await http.get(
-        Uri.parse('$urlEdit/api/addresses'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        }
-      );
-      
-      if(res.statusCode == 200){
-        final jsonRes = jsonDecode(res.body);
-        if(jsonRes['success'] == true){
-          List<dynamic> data = jsonRes['data'];
-          return data.map((item) => Address.fromJson(item)).toList();
-        }
-      }
-      return [];
-    } catch(e){
-      return [];
-    }
-  }
-
-  // Thêm địa chỉ mới
-  Future<bool> addAddress(String name, String street, String district, String city) async {
-    try {
-      final token = await StorageHelper.getToken();
-      if (token == null) return false;
-
-      final url = Uri.parse('$urlEdit/api/addresses/add');
-      
-      final response = await http.post(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'name': name,
-          'street': street,
-          'district': district,
-          'city': city,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        // Có thể in ra lỗi từ server để debug
-        final body = jsonDecode(response.body);
-        print("Lỗi thêm địa chỉ: ${body['message']}");
-        return false;
-      }
-    } catch (e) {
-      print("Lỗi server addAddress: $e");
-      return false;
-    }
-  }
-
-  // Đặt địa chỉ mặc định
-  Future<bool> setDefaultAddress(int addressId) async {
-    try {
-      final token = await StorageHelper.getToken();
-      if (token == null) return false;
-
-      final url = Uri.parse('$urlEdit/api/addresses/setup');
-
-      final response = await http.put(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'address_id': addressId,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return true;
-      }
-      return false;
-    } catch (e) {
-      print("Lỗi set default address: $e");
-      return false;
-    }
-  }
-
-  // Xóa địa chỉ
-  Future<bool> deleteAddress(int addressId) async {
-    try {
-      final token = await StorageHelper.getToken();
-      if (token == null) return false;
-
-      final url = Uri.parse('$urlEdit/api/addresses/delete');
-
-      final response = await http.delete(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-        body: jsonEncode({
-          'address_id': addressId,
-        }),
-      );
-
-      if (response.statusCode == 200) {
-        return true;
-      } else {
-        final body = jsonDecode(response.body);
-        print("Lỗi xóa địa chỉ: ${body['message']}");
-        return false;
-      }
-    } catch (e) {
-      print("Lỗi delete address: $e");
       return false;
     }
   }
@@ -575,32 +451,18 @@ class ApiService {
       print('Promotions response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final decoded = json.decode(response.body);
-
-        List<dynamic> dataList;
-        if (decoded is List) {
-          dataList = decoded;
-        } else if (decoded is Map && decoded['data'] is List) {
-          dataList = decoded['data'];
-        } else if (decoded is Map && decoded['success'] == true && decoded['data'] == null) {
-          // Unexpected but handle gracefully
-          return [];
-        } else {
-          print('Unexpected promotions JSON shape: ${decoded.runtimeType}');
-          return [];
-        }
-
-        return dataList.map((json) => Promotion.fromJson(json)).toList();
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => Promotion.fromJson(json)).toList();
+      } else {
+        throw Exception('Failed to load promotions');
       }
-
-      return [];
     } catch (e) {
       print("Lỗi getPromotions: $e");
       return [];
     }
   }
 
-  Future<bool> checkAddressbyId() async {
+  Future<int?> getDefaultAddessId() async {
     try {
       final token = await StorageHelper.getToken();
       final res = await http.get(
@@ -610,46 +472,275 @@ class ApiService {
           'Authorization': 'Bearer $token',
         },
       );
+
       if (res.statusCode == 200) {
+        final data = jsonDecode(res.body);
+        final List<dynamic> address = data['data'];
+        if (address.isNotEmpty) {
+          return address[0]['address_id'];
+        }
+      }
+      return null;
+    } catch (e) {
+      print('Lỗi không tìm thấy địa chỉ');
+      return null;
+    }
+  }
+
+  Future<bool> addAddress(
+    String name,
+    String street,
+    String district,
+    String city,
+  ) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/add');
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({
+          'name': name,
+          'street': street,
+          'district': district,
+          'city': city,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        return true;
+      } else {
+        // Có thể in ra lỗi từ server để debug
+        final body = jsonDecode(response.body);
+        print("Lỗi thêm địa chỉ: ${body['message']}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi server addAddress: $e");
+      return false;
+    }
+  }
+
+  // Đặt địa chỉ mặc định
+  Future<bool> setDefaultAddress(int addressId) async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/setup');
+
+      final response = await http.put(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'address_id': addressId}),
+      );
+
+      if (response.statusCode == 200) {
         return true;
       }
       return false;
     } catch (e) {
-      print('Lỗi không tìm thấy địa chỉ');
+      print("Lỗi set default address: $e");
       return false;
-      // Lọc sản phẩm
     }
   }
 
-  Future<List<Product>> filterProducts({
-    String? categoryId,
-    int? rating,
-    double? minPrice,
-    double? maxPrice,
-  }) async {
-    final uri = Uri.parse('$urlEdit/api/products/filter').replace(
-      queryParameters: {
-        if (categoryId != null && categoryId != "All") 'categoryId': categoryId,
-        if (rating != null && rating > 0) 'rating': rating.toString(),
-        if (minPrice != null) 'minPrice': minPrice.toString(),
-        if (maxPrice != null) 'maxPrice': maxPrice.toString(),
-      },
-    );
-
+  // Xóa địa chỉ
+  Future<bool> deleteAddress(int addressId) async {
     try {
-      final response = await http.get(uri);
+      final token = await StorageHelper.getToken();
+      if (token == null) return false;
+
+      final url = Uri.parse('$urlEdit/api/addresses/delete');
+
+      final response = await http.delete(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode({'address_id': addressId}),
+      );
 
       if (response.statusCode == 200) {
-        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+        return true;
+      } else {
+        final body = jsonDecode(response.body);
+        print("Lỗi xóa địa chỉ: ${body['message']}");
+        return false;
+      }
+    } catch (e) {
+      print("Lỗi delete address: $e");
+      return false;
+    }
+  }
+
+  Future<CheckoutPreviewRes?> previewOrder({
+    required List<Map<String, dynamic>>
+    items, // Gửi lên: [{ "productId": 1, "quantity": 2 }]
+    int? promotionId,
+    int? shippingAddressId,
+  }) async {
+    try {
+      final token = await StorageHelper.getToken();
+      final url = Uri.parse('$urlEdit/api/orders/preview');
+
+      final body = {
+        "items": items,
+        "promotionId": promotionId,
+        "shippingAddressId": shippingAddressId,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        final jsonResponse = jsonDecode(response.body);
         if (jsonResponse['success'] == true) {
-          final List<dynamic> data = jsonResponse['data'];
-          return data.map((item) => Product.fromJson(item)).toList();
+          // Map dữ liệu từ 'data' vào Model
+          return CheckoutPreviewRes.fromJson(jsonResponse['data']);
+        }
+      } else {
+        print("Lỗi Preview: ${response.body}");
+      }
+    } catch (e) {
+      print("Exception Preview: $e");
+    }
+    return null;
+  }
+
+  Future<List<Address>> getAddress() async {
+    try {
+      final token = await StorageHelper.getToken();
+      if (token == null) return [];
+
+      final res = await http.get(
+        Uri.parse('$urlEdit/api/addresses'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (res.statusCode == 200) {
+        final jsonRes = jsonDecode(res.body);
+        if (jsonRes['success'] == true) {
+          List<dynamic> data = jsonRes['data'];
+          return data.map((item) => Address.fromJson(item)).toList();
         }
       }
       return [];
     } catch (e) {
-      print("Lỗi filterProducts: $e");
       return [];
     }
+  }
+
+  // 2. API Tạo đơn hàng (Create Order Transaction)
+  Future<Map<String, dynamic>> createOrder({
+    required List<Map<String, dynamic>> items,
+    required int shippingAddressId,
+    int? promotionId,
+    String note = '',
+    String paymentMethod = 'COD',
+    bool isBuyFromCart = false,
+  }) async {
+    try {
+      final token = await StorageHelper.getToken();
+      final url = Uri.parse(
+        '$urlEdit/api/orders/create',
+      ); // Route backend phải khớp cái này
+
+      final body = {
+        "items": items,
+        "shippingAddressId": shippingAddressId,
+        "promotionId": promotionId,
+        "note": note,
+        "paymentMethod": paymentMethod,
+        "isBuyFromCart": isBuyFromCart,
+      };
+
+      final response = await http.post(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+        body: jsonEncode(body),
+      );
+
+      final jsonResponse = jsonDecode(response.body);
+      return jsonResponse; // Trả về cả cục để Screen check success true/false
+    } catch (e) {
+      throw Exception("Lỗi tạo đơn hàng: $e");
+    }
+  }
+
+  // --- MỚI THÊM: Hàm lọc sản phẩm nâng cao ---
+  Future<List<Product>> filterProducts({
+    required String categoryId,
+    required int rating,
+    required double minPrice,
+    required double maxPrice,
+  }) async {
+    try {
+      // 1. Tạo Query String để gửi dữ liệu lên server
+      // Lưu ý: Endpoint này phải khớp với Backend của bạn (ví dụ: /api/products/filter)
+      // Nếu categoryId là "All", backend cần xử lý để bỏ qua lọc theo danh mục
+      final queryParams = {
+        'categoryId': categoryId, // Sửa category_id -> categoryId
+        'rating': rating.toString(), // Giữ nguyên
+        'minPrice': minPrice.toString(), // Sửa min_price -> minPrice
+        'maxPrice': maxPrice.toString(), // Sửa max_price -> maxPrice
+      };
+
+      // 2. Tạo URI
+      // Cách 1: Ghép chuỗi thủ công (giống phong cách code cũ của bạn)
+      // final url = Uri.parse('$urlEdit/api/products/filter?category_id=$categoryId&rating=$rating&min_price=$minPrice&max_price=$maxPrice');
+
+      // Cách 2: Dùng Uri.http/https hoặc replace queryParameters (Chuẩn hơn)
+      final uri = Uri.parse(
+        '$urlEdit/api/products/filter',
+      ).replace(queryParameters: queryParams);
+
+      print("Calling Filter API: $uri"); // Log để kiểm tra link
+
+      final response = await http.get(
+        uri,
+        headers: {'Content-Type': 'application/json'},
+        // Nếu API yêu cầu token thì uncomment dòng dưới:
+        // headers: {'Content-Type': 'application/json', 'Authorization': 'Bearer ${await StorageHelper.getToken()}'},
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> jsonResponse = jsonDecode(response.body);
+
+        if (jsonResponse['success'] == true) {
+          List<dynamic> data = jsonResponse['data'];
+          return data.map((item) => Product.fromJson(item)).toList();
+        } else {
+          print("Filter API trả về false: ${jsonResponse['message']}");
+        }
+      } else {
+        print("Lỗi Server Filter: ${response.statusCode}");
+      }
+    } catch (e) {
+      print("Lỗi kết nối filterProducts: $e");
+    }
+    return []; // Trả về danh sách rỗng nếu lỗi
   }
 }

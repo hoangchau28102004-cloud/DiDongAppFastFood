@@ -618,39 +618,6 @@ export default class userController {
         }
     }
 
-    static async checkout(req,res){
-        try {
-            const userId = req.userId;
-            const { shipping_address_id, note, items, isBuyFromCart, promotion_id } = req.body;
-
-            if(!shipping_address_id || items || items.length === 0){
-                return res.status(400).json({
-                    success: false,
-                    message: 'THiếu thông tin địa chỉ giao hàng hoặc sản phẩm'
-                });
-            }
-
-            const result = await userModel.createTransport({
-                userId: userId,
-                shippingAddressId: shipping_address_id,
-                note: note,
-                items: items,
-                isBuyFromCart: isBuyFromCart,
-                promotionId: promotion_id
-            });
-
-            return res.status(200).json({
-                success: true,
-                message: 'Tạo đơn thành công'
-            })
-        } catch (error) {
-             return res.status(500).json({
-                    success: false,
-                    message: error.message
-                });
-        }
-    }
-
     static async checkAddressById(req,res){
         try {
             
@@ -672,6 +639,48 @@ export default class userController {
                 success: false,
                 message: 'Lỗi server'
             });
+        }
+    }
+
+    static async priviewOrder(req,res){
+        try {
+            // Nhận: items (mảng [{productId, quantity}]), promotionId, shippingAddressId
+            const { items, promotionId, shippingAddressId } = req.body;
+
+            if (!items || items.length === 0) {
+                return res.status(400).json({ message: 'Không có sản phẩm để tính toán' });
+            }
+
+            const calculation = await userModel.previewOrder(items, promotionId, shippingAddressId);
+            res.status(200).json({ success: true, data: calculation });
+        } catch (error) {
+            console.error("Preview Order Error:", error);
+            res.status(500).json({ message: error.message });
+        }
+    }
+
+    static async checkout(req,res){
+        try {
+            const userId = req.userId;
+            const { items, shippingAddressId, note, promotionId, paymentMethod, isBuyFromCart } = req.body;
+
+            if (!items || items.length === 0) return res.status(400).json({ message: 'Giỏ hàng trống' });
+            if (!shippingAddressId) return res.status(400).json({ message: 'Thiếu địa chỉ giao hàng' });
+
+            const result = await userModel.createOrderTransaction({
+                userId,
+                items,
+                shippingAddressId,
+                note,
+                promotionId,
+                paymentMethod,
+                isBuyFromCart // true/false: để biết có xóa giỏ hàng cũ không
+            });
+
+            res.status(201).json(result);
+        } catch (error) {
+            console.error("Checkout Error:", error);
+            res.status(500).json({ success: false, message: 'Đặt hàng thất bại: ' + error.message });
         }
     }
 }

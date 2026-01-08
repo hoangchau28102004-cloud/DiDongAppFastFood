@@ -30,7 +30,8 @@ class _HomePageScreenState extends State<HomePageScreen> {
   String _selectedCategory = "All";
   int _currentBottomIndex = 0;
 
-  List<CategoryItem> _filterCategories = []; // <--- MỚI THÊM (Biến chứa danh mục cho bộ lọc)
+  List<CategoryItem> _filterCategories =
+      []; // <--- MỚI THÊM (Biến chứa danh mục cho bộ lọc)
 
   @override
   void initState() {
@@ -64,11 +65,11 @@ class _HomePageScreenState extends State<HomePageScreen> {
         // --- MỚI THÊM (Lấy dữ liệu cho bảng lọc) ---
         final uniqueCats = <int, String>{};
         for (var p in products) {
-           uniqueCats[p.categoryId] = p.categoryName; 
+          uniqueCats[p.categoryId] = p.categoryName;
         }
         _filterCategories = uniqueCats.entries
-           .map((e) => CategoryItem(id: e.key.toString(), name: e.value))
-           .toList();
+            .map((e) => CategoryItem(id: e.key.toString(), name: e.value))
+            .toList();
         // ------------------------------------------
       });
     }
@@ -76,19 +77,21 @@ class _HomePageScreenState extends State<HomePageScreen> {
   }
 
   // --- MỚI THÊM (Hàm hiển thị menu lọc) ---
- void _showFilterMenu() {
+  void _showFilterMenu() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) {
         return Padding(
-           padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-           child: FilterModal(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+          ),
+          child: FilterModal(
             categories: _filterCategories,
             // Callback bây giờ nhận về maxPrice (double) thay vì RangeValues
             onApply: (catId, rating, maxPrice) {
-               _applyAdvancedFilter(catId, rating, maxPrice);
+              _applyAdvancedFilter(catId, rating, maxPrice);
             },
           ),
         );
@@ -98,22 +101,26 @@ class _HomePageScreenState extends State<HomePageScreen> {
   // ----------------------------------------
 
   // --- MỚI THÊM (Hàm gọi API lọc) ---
-Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice) async {
-      setState(() {}); 
-      try {
-        final result = await _apiService.filterProducts(
-          categoryId: categoryId,
-          rating: rating,
-          minPrice: 0, // <--- LUÔN SET MIN LÀ 0
-          maxPrice: maxPrice, // <--- SET MAX THEO THANH KÉO
-        );
-        setState(() {
-          _homeDisplayProducts = result;
-          _productsFuture = Future.value(result); 
-        });
-      } catch (e) {
-        print("Lỗi Filter: $e");
-      }
+  Future<void> _applyAdvancedFilter(
+    String categoryId,
+    int rating,
+    double maxPrice,
+  ) async {
+    setState(() {});
+    try {
+      final result = await _apiService.filterProducts(
+        categoryId: categoryId,
+        rating: rating,
+        minPrice: 0, // <--- LUÔN SET MIN LÀ 0
+        maxPrice: maxPrice, // <--- SET MAX THEO THANH KÉO
+      );
+      setState(() {
+        _homeDisplayProducts = result;
+        _productsFuture = Future.value(result);
+      });
+    } catch (e) {
+      print("Lỗi Filter: $e");
+    }
   }
   // ----------------------------------
 
@@ -204,7 +211,8 @@ Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice
           // TOP BAR
           CustomTopBar(
             isHome:
-                _currentBottomIndex == 0, // Chỉ hiện lời chào "Good Morning" ở trang Home
+                _currentBottomIndex ==
+                0, // Chỉ hiện lời chào "Good Morning" ở trang Home
             searchController: _search,
             // --- MỚI THÊM (Gắn sự kiện bấm nút lọc) ---
             onFilterTap: _showFilterMenu,
@@ -220,13 +228,13 @@ Future<void> _applyAdvancedFilter(String categoryId, int rating, double maxPrice
       bottomNavigationBar: CustomBottomBar(
         selectedIndex: _currentBottomIndex,
         onItemTapped: (index) {
-            // Các nút khác thì hoạt động như cũ
-            setState(() {
-              _currentBottomIndex = index;
-              if (index == 2) {
-                _loadFavData();
-              }
-            });
+          // Các nút khác thì hoạt động như cũ
+          setState(() {
+            _currentBottomIndex = index;
+            if (index == 2) {
+              _loadFavData();
+            }
+          });
         },
       ),
     );

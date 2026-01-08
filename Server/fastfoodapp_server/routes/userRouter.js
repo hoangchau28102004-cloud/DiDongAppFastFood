@@ -45,6 +45,11 @@ userRouter.put('/carts/update',auth,userController.updateCartItem);
 userRouter.delete('/carts/delete',auth,userController.removeCartItem);
 
 //Order
+userRouter.post('/orders/preview',auth,userController.priviewOrder);
+userRouter.post('/orders/create',auth,userController.checkout);
+//Check
+userRouter.get('/address/check',auth,userController.checkAddressById);
+
 userRouter.post('/orders/checkout',auth,userController.checkout);
 
 //Address
