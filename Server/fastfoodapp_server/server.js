@@ -3,6 +3,8 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import userRouter from './routes/userRouter.js';
 import productRouter from './routes/productRouter.js';
+import promotionRouter from './routes/promotionRouter.js';
+import PromotionController from './controller/promotionsController.js';
 dotenv.config();
 
 const app = express();
@@ -17,8 +19,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', productRouter);
 app.use('/api', userRouter);
 
+// Ensure promotions route is registered explicitly (some environments may need direct handler)
+app.use('/api/promotions', promotionRouter);
+app.get('/api/promotions', (req, res, next) => {
+    console.log('Direct /api/promotions hit');
+    return PromotionController.getPromotions(req, res).catch(next);
+});
 app.use('/uploads', express.static('uploads'));
-
 // Default route
 app.get('/', (req, res) => {
     res.send('FastFood API is running on port ' + PORT);

@@ -1,7 +1,6 @@
+import 'package:appfastfood/models/promotion.dart';
+import 'package:appfastfood/service/api_service.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; 
-import '../../../models/promotion.dart';
-import '../../../service/api_service.dart';
 
 class PromotionScreen extends StatefulWidget {
   const PromotionScreen({super.key});
@@ -11,116 +10,150 @@ class PromotionScreen extends StatefulWidget {
 }
 
 class _PromotionScreenState extends State<PromotionScreen> {
-  final ApiService _apiService = ApiService();
-  late Future<List<Promotion>> _promotionFuture;
+  late Future<List<Promotion>> _futurePromotions;
 
   @override
   void initState() {
     super.initState();
-    _promotionFuture = _apiService.getPromotions(); 
-  }
-
-  // Hàm format ngày cho đẹp (VD: 02/02)
-  String _formatDate(DateTime? date) {
-    if (date == null) return "...";
-    return "${date.day}/${date.month}";
+    _futurePromotions = ApiService().getPromotions();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.white,
-      child: FutureBuilder<List<Promotion>>(
-        future: _promotionFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text("Lỗi kết nối: ${snapshot.error}"));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return const Center(child: Text("Chưa có chương trình khuyến mãi nào!"));
-          }
+    // Màu vàng theo thiết kế
+    final yellowColor = const Color(0xFFFFC529); 
+    // Màu đỏ cam theo thiết kế
+    final redColor = const Color(0xFFE95322);
 
-          final promotions = snapshot.data!;
+    return Scaffold(
+      backgroundColor: Colors.white, // Nền trắng
+      body: Column(
+        children: [
+          // 1. HEADER (Màu vàng)
+          Container(
+            padding: const EdgeInsets.only(top: 50, bottom: 20, left: 20, right: 20),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: yellowColor,
+              // Bo tròn góc dưới nếu thích (trong ảnh của bạn thì thẳng, nhưng bo nhẹ sẽ đẹp hơn)
+              borderRadius: const BorderRadius.only(
+                bottomLeft: Radius.circular(20),
+                bottomRight: Radius.circular(20),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Nếu muốn nút back thì bỏ comment dòng dưới
+                // Icon(Icons.arrow_back_ios, size: 18, color: redColor),
+                const Spacer(),
+                const Text(
+                  "Khuyến Mãi",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white, 
+                  ),
+                ),
+                const Spacer(),
+                // Icon ảo để căn giữa text
+                const SizedBox(width: 20), 
+              ],
+            ),
+          ),
 
-          return ListView.separated(
-            padding: const EdgeInsets.all(16),
-            itemCount: promotions.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 16),
-            itemBuilder: (context, index) {
-              final item = promotions[index];
-              
-              // Tạo chuỗi hiển thị hạn sử dụng
-              String timeDesc = "Hạn dùng: ${_formatDate(item.startDate)} - ${_formatDate(item.endDate)}";
-              
-              String discountDisplay = item.discountPercent.toStringAsFixed(0);
+          // 2. DANH SÁCH VOUCHER
+          Expanded(
+            child: FutureBuilder<List<Promotion>>(
+              future: _futurePromotions,
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator(color: redColor));
+                }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const Center(child: Text("Chưa có chương trình khuyến mãi nào."));
+                }
 
-              return _buildCouponCard(item.name, timeDesc, discountDisplay);
-            },
-          );
-        },
+                final list = snapshot.data!;
+                return ListView.separated(
+                  padding: const EdgeInsets.all(20),
+                  itemCount: list.length,
+                  separatorBuilder: (_, __) => const SizedBox(height: 20),
+                  itemBuilder: (context, index) {
+                    final item = list[index];
+                    return _buildVoucherCard(item, redColor);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
     );
   }
-  Widget _buildCouponCard(String title, String subtitle, String discount) {
-    return Container(
-      height: 100,
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFF9C4), 
-        borderRadius: BorderRadius.circular(15),
-        border: Border.all(color: Colors.orange.shade100),
-        boxShadow: [
-          BoxShadow(color: Colors.grey.withOpacity(0.2), blurRadius: 5, offset: const Offset(0, 3)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.only(left: 16, top: 12, bottom: 12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    title, // Tên chương trình KM từ DB
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black87),
-                    maxLines: 1, overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle, // Ngày tháng từ DB
-                    style: TextStyle(fontSize: 13, color: Colors.grey.shade700, fontStyle: FontStyle.italic),
-                    maxLines: 2, overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+
+  // Widget vẽ từng thẻ Voucher giống thiết kế
+  Widget _buildVoucherCard(Promotion promo, Color redColor) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.centerRight,
+      children: [
+        // NỀN THẺ (Màu kem)
+        Container(
+          height: 80,
+          width: double.infinity,
+          margin: const EdgeInsets.only(right: 15), // Chừa chỗ cho cái tem thò ra
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+          decoration: BoxDecoration(
+            color: const Color(0xFFF9F1D2), // Màu kem nhạt giống ảnh
+            borderRadius: BorderRadius.circular(15),
+          ),
+          alignment: Alignment.centerLeft,
+          child: Padding(
+            padding: const EdgeInsets.only(right: 40.0), // Tránh chữ đè lên tem
+            child: Text(
+              promo.name,
+              style: const TextStyle(
+                fontSize: 16,
+                color: Colors.black87,
+                fontWeight: FontWeight.w500,
               ),
+              maxLines: 2,
+              overflow: TextOverflow.ellipsis,
             ),
           ),
-          Container(width: 1, height: 70, color: Colors.orange.shade200, margin: const EdgeInsets.symmetric(horizontal: 10)),
-          
-          // Phần Tem đỏ
-          SizedBox(
-            width: 90,
-            child: Center(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Transform.rotate(
-                    angle: 0.785, 
-                    child: Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(4))),
+        ),
+
+        // TEM GIẢM GIÁ (Hình răng cưa màu đỏ)
+        Positioned(
+          right: 0,
+          child: Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: redColor, // Màu đỏ cam
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.white, width: 2), // Viền trắng cho nổi
+              boxShadow: [
+                 BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, 2))
+              ]
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  "-${promo.discountPercent.toInt()}%",
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
                   ),
-                  Container(width: 50, height: 50, decoration: BoxDecoration(color: Colors.deepOrange, borderRadius: BorderRadius.circular(4))),
-                  Text(
-                    "-$discount%", // Số % từ DB
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

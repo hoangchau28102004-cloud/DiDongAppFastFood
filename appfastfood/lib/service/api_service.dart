@@ -443,16 +443,33 @@ class ApiService {
     final url = Uri.parse('$urlEdit/api/promotions');
 
     try {
+      print('GET $url');
       final response = await http.get(url);
+      print('Promotions response status: ${response.statusCode}');
+      print('Promotions response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Promotion.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load promotions');
+        final decoded = json.decode(response.body);
+
+        List<dynamic> dataList;
+        if (decoded is List) {
+          dataList = decoded;
+        } else if (decoded is Map && decoded['data'] is List) {
+          dataList = decoded['data'];
+        } else if (decoded is Map && decoded['success'] == true && decoded['data'] == null) {
+          // Unexpected but handle gracefully
+          return [];
+        } else {
+          print('Unexpected promotions JSON shape: ${decoded.runtimeType}');
+          return [];
+        }
+
+        return dataList.map((json) => Promotion.fromJson(json)).toList();
       }
+
+      return [];
     } catch (e) {
-      print("Lỗi lấy khuyến mãi: $e");
+      print("Lỗi getPromotions: $e");
       return [];
     }
   }
