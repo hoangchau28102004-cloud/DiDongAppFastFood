@@ -9,6 +9,7 @@ import 'package:appfastfood/views/widget/topbar_page.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart'; // Cần thêm intl vào pubspec.yaml để format ngày
 import 'package:image_picker/image_picker.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -45,6 +46,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
         User? userFetchedFromApi = await ApiService().getProfile();
         
         if (mounted && userFetchedFromApi != null) {
+          SharedPreferences prefs = await SharedPreferences.getInstance();
+          String userJson = jsonEncode(userFetchedFromApi.toJson()); 
+          await prefs.setString('user_data', userJson);
            setState(() {
             _currentUser = userFetchedFromApi;
 
