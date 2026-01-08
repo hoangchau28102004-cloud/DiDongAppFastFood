@@ -19,6 +19,8 @@ class _CartScreenState extends State<CartScreen> {
 
   final Set<int> _selecteItem = {};
 
+  bool isAddress = false;
+
   @override
   void initState() {
     super.initState();
@@ -44,6 +46,27 @@ class _CartScreenState extends State<CartScreen> {
       setState(() {
         _isLoading = false;
       });
+    }
+  }
+
+  Future<void> _checkAddress() async {
+    final success = await ApiService().checkAddressbyId();
+    if (success && mounted) {
+      setState(() {
+        isAddress = true;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Bạn hãy đợi tui code tiếp nhé chưa mua đc đâu'),
+        ),
+      );
+    } else {
+      setState(() {
+        isAddress = false;
+      });
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Địa chỉ của ní đâu ní')));
     }
   }
 
@@ -296,9 +319,7 @@ class _CartScreenState extends State<CartScreen> {
                             onPressed: _selecteItem.isEmpty
                                 ? null
                                 : () {
-                                    print(
-                                      "Thanh toán ${_selecteItem.length} món",
-                                    );
+                                    _checkAddress();
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: const Color(0xFFFFC529),
@@ -322,26 +343,6 @@ class _CartScreenState extends State<CartScreen> {
                 ],
               ),
             ),
-    );
-  }
-
-  Widget _buildSummaryRow(
-    String label,
-    double amount, {
-    bool isDiscount = false,
-  }) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-        Text(
-          isDiscount ? "% khi chọn khuyến mãi" : currentFormat.format(amount),
-          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 }

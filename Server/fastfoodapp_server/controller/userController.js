@@ -537,4 +537,28 @@ export default class userController {
                 });
         }
     }
+
+    static async checkAddressById(req,res){
+        try {
+            
+            const userId = req.userId;
+            const addressData = await userModel.checkAddressById(userId);
+            if(addressData  && addressData.length > 0){
+            return res.status(200).json({
+            success: true,
+            data: addressData
+            });
+        }
+        return res.status(400).json({
+            success: false,
+            message: 'Lỗi Lỗi không có địa chỉ'
+        });
+        } catch (error) {
+            console.error('Lỗi không check được',error);
+            return res.status(500).json({
+                success: false,
+                message: 'Lỗi server'
+            });
+        }
+    }
 }

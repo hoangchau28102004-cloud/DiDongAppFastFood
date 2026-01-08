@@ -9,7 +9,7 @@ import '../models/products.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://10.198.165.37:8001'; //máy thật
+  static const String baseUrl = 'http://192.168.30.165:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
@@ -32,6 +32,7 @@ class ApiService {
           jsonResponse['token'] != null) {
         await StorageHelper.saveToke(jsonResponse['token']);
         await StorageHelper.saveUserId(jsonResponse['user']['user_id']);
+
         return jsonResponse;
       } else {
         throw Exception(jsonResponse['message'] ?? 'Đăng nhập thất bại');
@@ -439,7 +440,7 @@ class ApiService {
 
   //Lấy mã Khuyến Mãi
   Future<List<Promotion>> getPromotions() async {
-    final url = Uri.parse('$urlEdit/promotions');
+    final url = Uri.parse('$urlEdit/api/promotions');
 
     try {
       final response = await http.get(url);
@@ -453,6 +454,26 @@ class ApiService {
     } catch (e) {
       print("Lỗi lấy khuyến mãi: $e");
       return [];
+    }
+  }
+
+  Future<bool> checkAddressbyId() async {
+    try {
+      final token = await StorageHelper.getToken();
+      final res = await http.get(
+        Uri.parse('$urlEdit/api/address/check'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+      if (res.statusCode == 200) {
+        return true;
+      }
+      return false;
+    } catch (e) {
+      print('Lỗi không tìm thấy địa chỉ');
+      return false;
     }
   }
 }

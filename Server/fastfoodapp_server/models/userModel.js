@@ -54,6 +54,7 @@ export default class userModel {
     // Tìm user bằng ID (dùng cho profile)
     static async findById(id) {
         try {
+            
              const sql = `
                 SELECT 
                     a.account_id, a.Username, a.role,
@@ -368,6 +369,20 @@ export default class userModel {
             if(connection) await rollbackTransaction(connection);
             console.error("Lỗi create Order: ",e);
             throw new Error(e.message);
+        }
+    }
+
+    static async checkAddressById(userId){
+        try {
+            console.log("Đang check User ID:", userId); // <--- Thêm dòng này
+            const [rows] = await execute(`
+                SELECT * FROM Addresses where user_id = ?`,[userId]);
+            console.log("Kết quả tìm thấy:", rows);
+            return rows;
+            
+        } catch (error) {
+            console.error("Lỗi check address",error);
+            throw new Error(error.message);
         }
     }
 }
