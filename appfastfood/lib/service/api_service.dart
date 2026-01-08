@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:appfastfood/models/address.dart';
 import 'package:appfastfood/models/cartItem.dart';
 import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/models/promotion.dart';
@@ -161,6 +162,34 @@ class ApiService {
     } catch (e) {
       print('Lỗi updateProfile: $e');
       return false;
+    }
+  }
+
+  // Lấy tất cả địa chỉ
+  Future<List<Address>> getAddress() async{
+    try{
+      final token = await StorageHelper.getToken();
+      if(token  == null) return [];
+
+
+      final res = await http.get(
+        Uri.parse('$urlEdit/api/addresses'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        }
+      );
+      
+      if(res.statusCode == 200){
+        final jsonRes = jsonDecode(res.body);
+        if(jsonRes['success'] == true){
+          List<dynamic> data = jsonRes['data'];
+          return data.map((item) => Address.fromJson(item)).toList();
+        }
+      }
+      return [];
+    } catch(e){
+      return [];
     }
   }
 

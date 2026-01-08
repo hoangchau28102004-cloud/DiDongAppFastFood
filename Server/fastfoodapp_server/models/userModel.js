@@ -110,6 +110,21 @@ export default class userModel {
         }
     }
 
+    // Lấy danh sách địa chỉ của User
+    static async getAddressByUserId(userId){
+        try{
+            const sql=`
+                SELECT a.* FROM users u 
+                JOIN addresses a ON u.user_id = a.user_id
+                WHERE u.user_id = ?
+            `;
+            const [rows] = await execute(sql,[userId]);
+            return rows;
+        }catch(e){
+            throw e;
+        }
+    }
+
     // Thêm sản phẩm yêu thích
     static async addFavorites(userId,productId){
         try{

@@ -4,10 +4,11 @@ import 'package:appfastfood/models/user.dart';
 import 'package:appfastfood/service/api_service.dart';
 import 'package:appfastfood/utils/app_colors.dart';
 import 'package:appfastfood/utils/storage_helper.dart';
+import 'package:appfastfood/views/screens/users/address_list.dart';
 import 'package:appfastfood/views/widget/auth_widgets.dart';
 import 'package:appfastfood/views/widget/topbar_page.dart';
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart'; // Cần thêm intl vào pubspec.yaml để format ngày
+import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -274,7 +275,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                         height: 45, // Tăng chiều cao chút cho dễ bấm
                         child: ElevatedButton(
                           onPressed: () {
-                            // Navigate logic
+                            Navigator.push(context, MaterialPageRoute(builder: (context) => AddressList()));
                           },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primaryOrange,
@@ -284,7 +285,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             elevation: 3,
                           ),
                           child: const Text(
-                            "Thay đổi địa chỉ",
+                            "Địa chỉ",
                             style: TextStyle(
                               color: Colors.white,
                                 fontWeight: FontWeight.bold,
@@ -311,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                             elevation: 3,
                           ),
                           child: const Text(
-                            "Cập nhật thông tin",
+                            "Cập nhật",
                             style: TextStyle(
                               color: Colors.white,
                                 fontWeight: FontWeight.bold,

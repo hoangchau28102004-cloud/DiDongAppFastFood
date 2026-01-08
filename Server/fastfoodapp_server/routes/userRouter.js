@@ -47,7 +47,6 @@ userRouter.delete('/carts/delete',auth,userController.removeCartItem);
 //Order
 userRouter.post('/orders/checkout',auth,userController.checkout);
 
-//Check
-userRouter.get('/address/check',auth,userController.checkAddressById);
-
+//Address
+userRouter.get('/addresses', auth,userController.getAddressList)
 export default userRouter;

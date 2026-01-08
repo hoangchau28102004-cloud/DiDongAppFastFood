@@ -217,6 +217,23 @@ export default class userController {
             res.status(500).json({ success: false, message: 'Lỗi server: ' + error.message });
         }
     }
+
+    // Hiển thị danh sách địa chỉ
+    static async getAddressList(req,res){
+        try{
+            const userId = req.userId;
+
+            const listAddress = await userModel.getAddressByUserId(userId);
+
+            return res.status(200).json({
+                success: true,
+                data: listAddress
+            });
+        }catch(error){
+            console.error(error);
+            res.status(500).json({success: false, message: 'Lỗi server'});
+        }
+    }
     
     // Forget password
     static async forgetPassword(req, res) {
