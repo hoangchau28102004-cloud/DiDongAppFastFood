@@ -15,6 +15,7 @@ class PromotionModel {
             ORDER BY end_date ASC
         `;
         const [rows] = await execute(sql);
+        console.log("lấy đc: ",rows)
         return rows;
     }
 }

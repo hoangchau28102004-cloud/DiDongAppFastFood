@@ -11,7 +11,7 @@ import '../models/checkout.dart';
 import 'dart:convert';
 
 class ApiService {
-  static const String baseUrl = 'http://192.168.100.248:8001'; //máy thật
+  static const String baseUrl = 'http://10.59.96.3:8001'; //máy thật
   static const String BaseUrl = 'http://10.0.2.2:8001'; // máy ảo
 
   static final String urlEdit = baseUrl; //chỉnh url trên đây thôi
@@ -451,11 +451,27 @@ class ApiService {
       print('Promotions response body: ${response.body}');
 
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        return data.map((json) => Promotion.fromJson(json)).toList();
-      } else {
-        throw Exception('Failed to load promotions');
+        final decoded = json.decode(response.body);
+
+        List<dynamic> dataList;
+        if (decoded is List) {
+          dataList = decoded;
+        } else if (decoded is Map && decoded['data'] is List) {
+          dataList = decoded['data'];
+        } else if (decoded is Map &&
+            decoded['success'] == true &&
+            decoded['data'] == null) {
+          // Unexpected but handle gracefully
+          return [];
+        } else {
+          print('Unexpected promotions JSON shape: ${decoded.runtimeType}');
+          return [];
+        }
+
+        return dataList.map((json) => Promotion.fromJson(json)).toList();
       }
+
+      return [];
     } catch (e) {
       print("Lỗi getPromotions: $e");
       return [];
